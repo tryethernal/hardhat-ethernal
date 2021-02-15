@@ -23,3 +23,8 @@ await hre.ethernal.push({
     address: greeter.address
 });
 ```
+The following fields will be synchronized:
+- contractName
+- abi
+- ast
+- source
