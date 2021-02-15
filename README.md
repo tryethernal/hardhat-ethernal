@@ -12,7 +12,9 @@ In your deploy script, first require the plugin:
 ```js
 const ethernal = require('hardhat-ethernal');
 ```
-Push your artifacts to Ethernal, after deploying your contract:
+Then, push your artifacts to Ethernal, after deploying your contract:
+
+/!\ The name parameter needs to match the name of the contract
 ```js
 const Greeter = await hre.ethers.getContractFactory("Greeter");
 const greeter = await Greeter.deploy("Hello, Hardhat!");
