@@ -19,5 +19,5 @@ const greeter = await Greeter.deploy("Hello, Hardhat!");
 await hre.ethernal.push({
     name: 'Greeter',
     address: greeter.address
-})
+});
 ```
