@@ -1,6 +1,7 @@
 # Hardhat plugin for Ethernal
 
 Synchronize your Hardhat artifacts with [Ethernal](https://www.tryethernal.com)
+
 If you are looking for more detailed doc about Ethernal: https://doc.tryethernal.com
 
 ## Installation
