@@ -1,6 +1,8 @@
 # Hardhat plugin for Ethernal
 
-Synchronize your Hardhat artifacts with [Ethernal](https://www.tryethernal.com)
+This plugin lets you synchronize blocks, transactions & artifacts with [Ethernal](https://www.tryethernal.com)
+
+When using it, you don't need to use the CLI.
 
 If you are looking for more detailed doc about Ethernal: https://doc.tryethernal.com
 
@@ -8,7 +10,28 @@ If you are looking for more detailed doc about Ethernal: https://doc.tryethernal
 
 Add ```hardhat-ethernal``` to your ```package.json```, and run ```npm install``` or ```yarn```
 
-## Usage
+## Synchronize blocks & transactions
+
+In your ```hardhat-config.js```file, require the plugin:
+```js
+require('hardhat-ethernal');
+````
+
+That's it! Blocks and transactions will now be synchronized.
+
+### Options
+
+It's possible to disable the synchronization by setting ```ethernalSync``` to ```false``` on the ```hre``` object.
+
+You can also specify which workspace you want to synchronize blocks & transactions to (default to the last one used in the dashboard):
+```js
+extendEnvironment((hre) => {
+    hre.ethernalSync = true;
+    hre.ethernalWorkspace = 'Workspace';
+});
+```
+
+## Synchronize artifacts
 
 In your deploy script, first require the plugin:
 ```js
