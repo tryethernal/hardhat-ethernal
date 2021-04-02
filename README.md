@@ -23,7 +23,7 @@ That's it! Blocks and transactions will now be synchronized.
 
 It's possible to disable the synchronization by setting ```ethernalSync``` to ```false``` on the ```hre``` object.
 
-You can also specify which workspace you want to synchronize blocks & transactions to (default to the last one used in the dashboard):
+You can also specify which workspace you want to synchronize blocks & transactions to (default to the last one used in the dashboard).
 ```js
 extendEnvironment((hre) => {
     hre.ethernalSync = true;
