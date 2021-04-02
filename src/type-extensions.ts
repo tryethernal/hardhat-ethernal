@@ -30,7 +30,11 @@ declare module "hardhat/types/runtime" {
   // This is an example of an extension to the Hardhat Runtime Environment.
   // This new field will be available in tasks' actions, scripts, and tests.
   export interface HardhatRuntimeEnvironment {
+    ethers: any;
+    ethernalSync: boolean;
+    ethernalWorkspace: string;
     ethernal: {
+        startListening:() => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
     }
   }

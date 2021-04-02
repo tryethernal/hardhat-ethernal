@@ -1,6 +1,8 @@
-import { extendConfig, extendEnvironment, task } from "hardhat/config";
+require("@nomiclabs/hardhat-ethers");
+import { extendConfig, extendEnvironment, task, subtask } from "hardhat/config";
 import { lazyObject, HardhatPluginError } from "hardhat/plugins";
 import { HardhatConfig, HardhatUserConfig, ActionType, RunTaskFunction } from "hardhat/types";
+import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
 import path from "path";
 
 import { Ethernal } from "./Ethernal";
@@ -10,6 +12,14 @@ import { Artifact, ContractInput } from './types';
 import "./type-extensions";
 
 export const PluginName = 'hardhat-ethernal';
+
+subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
+    if (hre.ethernalSync)
+        hre.ethernal.startListening();
+    else
+        console.log('[Ethernal] Not syncing')
+    await runSuper(args);
+});
 
 extendConfig(
   (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
@@ -48,5 +58,6 @@ extendEnvironment((hre) => {
   // We add a field to the Hardhat Runtime Environment here.
   // We use lazyObject to avoid initializing things until they are actually
   // needed.
+  hre.ethernalSync = hre.ethernalSync ? hre.ethernalSync : true;
   hre.ethernal = lazyObject(() => new Ethernal(hre));
 });

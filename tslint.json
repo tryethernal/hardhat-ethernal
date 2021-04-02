@@ -5,7 +5,6 @@
     "tslint-config-prettier"
   ],
   "rules": {
-    "prettier": true,
     "object-literal-sort-keys": false,
     "no-submodule-imports": false,
     "interface-name": false,

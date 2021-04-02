@@ -14,7 +14,7 @@
     "ethernal"
   ],
   "scripts": {
-    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
+    "lint:fix": "tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "test": "mocha --exit --recursive 'test/**/*.test.ts'",
     "build": "tsc",
@@ -44,8 +44,12 @@
     "hardhat": "^2.0.0"
   },
   "dependencies": {
+    "@firebase/firestore-types": "^2.2.0",
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
     "configstore": "^5.0.1",
+    "ethers": "^5.0.32",
     "firebase": "^8.2.6",
+    "fs-extra": "^9.1.0",
     "hardhat": "^2.0.0",
     "keytar": "^7.3.0"
   }

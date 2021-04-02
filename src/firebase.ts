@@ -16,7 +16,7 @@ var _DB = class DB {
     workspace!: Workspace;
 
     get userId() {
-        return firebase.auth().currentUser.uid;
+        return firebase.auth().currentUser?.uid;
     }
 
     collection(path: string) {

@@ -1,3 +1,5 @@
+import { BlockWithTransactions } from '@ethersproject/abstract-provider';
+
 export type Artifact = {
     contractName: string;
     abi: any;
@@ -28,4 +30,17 @@ export type Workspace = {
         gas?: string;
         gasPrice?: string;
     }
+}
+
+export type SyncedBlock = {
+    hash: string;
+    parentHash: string;
+    number: number;
+    timestamp: string;
+    nonce: string;
+    difficulty: string;
+    gasLimit: string;
+    gasUsed: string;
+    miner: string;
+    extraData: string;
 }
