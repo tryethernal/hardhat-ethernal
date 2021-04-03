@@ -1,8 +1,10 @@
 # Hardhat plugin for Ethernal
 
-This plugin lets you synchronize blocks, transactions & artifacts with [Ethernal](https://www.tryethernal.com)
+[Ethernal](https://www.tryethernal.com) is a block explorer for EVM-based chains. You can use it with your local chain (the Hardhat network for example), or for chains deployed on remote servers.
 
-When using it, you don't need to use the CLI.
+It allows you to interact with contracts by generating automatically a UI for all read/write methods. You can also read contract variables in any blocks.
+
+To use Ethernal, you need to synchronize blocks, transactions & artifacts with the dashboard. This plugin allows you to easily do that instead of having to run the CLI separately.
 
 If you are looking for more detailed doc about Ethernal: https://doc.tryethernal.com
 
