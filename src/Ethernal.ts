@@ -70,7 +70,7 @@ export class Ethernal {
         logger(`Updated artifacts for contract ${ethernalContract.name} (${ethernalContract.address}), with dependencies: ${Object.keys(ethernalContract.dependencies)}`);
     }
 
-    private async onData(blockNumber: number, error: any) {
+    private onData(blockNumber: number, error: any) {
         if (error && error.reason) {
             return logger(`Error while receiving data: ${error.reason}`);
         }
@@ -101,25 +101,14 @@ export class Ethernal {
     }
 
     private syncBlock(block: BlockWithTransactions) {
-        var sBlock: BlockWithTransactions = this.sanitize(block);
-        var syncedBlock: SyncedBlock = {
-            hash: sBlock.hash,
-            parentHash: sBlock.parentHash,
-            number: sBlock.number,
-            timestamp: String(sBlock.timestamp),
-            nonce: sBlock.nonce,
-            difficulty: String(sBlock.difficulty),
-            gasLimit: sBlock.gasLimit.toString(),
-            gasUsed: sBlock.gasUsed.toString(),
-            miner: sBlock.miner,
-            extraData: sBlock.extraData
-        };
-
-        this.db.collection('blocks').doc(sBlock.number.toString()).set(syncedBlock).then(() => logger(`Synced block ${sBlock.number}`));
-
-        sBlock.transactions.forEach((transaction: TransactionResponse) => {
-            this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => this.syncTransaction(syncedBlock, transaction, receipt));
-        });
+        const promises = [];
+        if (block) {
+            promises.push(firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name }).then(({ data }: { data: any }) => console.log(`Synced block #${data.blockNumber}`)));
+            block.transactions.forEach((transaction: TransactionResponse) => {
+                this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => promises.push(this.syncTransaction(block, transaction, receipt)));
+            });
+        }
+        return Promise.all(promises);
     }
 
     private stringifyBns(obj: any) {
@@ -135,33 +124,13 @@ export class Ethernal {
         return res;
     }
     
-    private async syncTransaction(block: SyncedBlock, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
-        var stransactionReceipt: TransactionReceipt = this.stringifyBns(this.sanitize(transactionReceipt));
-        var sTransaction: TransactionResponse = this.stringifyBns(this.sanitize(transaction));
-        var txSynced = {
-           ...sTransaction,
-           functionSignature: '',
-            receipt: {
-                ...stransactionReceipt
-            },
-            timestamp: block.timestamp
-        }
-
-        if (transaction.to && transaction.data && transaction.value) {
-            txSynced.functionSignature = await this.getFunctionSignatureForTransaction(sTransaction);    
-        }
-        
-        this.db.collection('transactions')
-            .doc(sTransaction.hash)
-            .set(txSynced)
-            .then(() => logger(`Synced transaction ${sTransaction.hash}`));
-
-        if (!txSynced.to) {
-            this.db.collection('contracts')
-                .doc(transactionReceipt.contractAddress)
-                .set({ address: transactionReceipt.contractAddress })
-                .then(() => logger(`Synced new contract at ${transactionReceipt.contractAddress}`));
-        }
+    private syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
+        return firebase.functions.httpsCallable('syncTransaction')({
+            block: block,
+            transaction: transaction,
+            transactionReceipt: transactionReceipt,
+            workspace: this.db.workspace.name
+        }).then(({ data }: { data: any }) => console.log(`Synced transaction ${data.txHash}`));
     }
 
     private async getDefaultWorkspace() {
@@ -265,26 +234,5 @@ export class Ethernal {
                 .filter(([_, v]) => v != null)
             );
         return res;
-    }
-
-    private async getFunctionSignatureForTransaction(transaction: TransactionResponse) {
-        var doc = await this.db.collection('contracts').doc(transaction.to).get();
-
-        if (!doc || !doc.exists) {
-            return '';
-        }
-
-        var abi = doc.data().abi;
-
-        if (!abi) {
-            return '';
-        }
-
-        var jsonInterface = new this.env.ethers.utils.Interface(abi);
-
-        var parsedTransactionData = jsonInterface.parseTransaction({ data: transaction.data, value: transaction.value });
-        var fragment = parsedTransactionData.functionFragment;
-
-        return `${fragment.name}(` + fragment.inputs.map((input: any) => `${input.type} ${input.name}`).join(', ') + ')'
     }
 }

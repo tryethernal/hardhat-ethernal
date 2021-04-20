@@ -2032,18 +2032,6 @@ gtoken@^5.0.4:
     google-p12-pem "^3.0.3"
     jws "^4.0.0"
 
-hardhat-ethernal@/Users/antoine/ethernal/hardhat:
-  version "0.0.1"
-  dependencies:
-    "@firebase/firestore-types" "^2.2.0"
-    "@nomiclabs/hardhat-ethers" "^2.0.2"
-    configstore "^5.0.1"
-    ethers "^5.0.32"
-    firebase "^8.2.6"
-    fs-extra "^9.1.0"
-    hardhat "^2.0.0"
-    keytar "^7.3.0"
-
 hardhat@^2.0.0:
   version "2.0.8"
   resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.0.8.tgz#6ec232293dd6b3ca7baeadb095ba4afce4b9b2e0"
