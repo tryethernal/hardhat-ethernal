@@ -8,8 +8,8 @@ const path = require('path');
 const credentials = require('./credentials');
 const firebase = require('./firebase');
 
-var logger = (message: string) => {
-    console.log(`[Ethernal] ${message}`);
+var logger = (message: any) => {
+    console.log(`[Ethernal] `, message);
 }
 
 export class Ethernal {
@@ -40,34 +40,43 @@ export class Ethernal {
             return logger('Contract name and address are mandatory');
         }
         
-        const ethernalContract = await this.getFormattedArtifact(targetContract);
+        const contract = await this.getFormattedArtifact(targetContract);
 
-        if (!ethernalContract) {
+        if (!contract) {
             return;
         }
         
-        var storeArtifactRes = await this.db.contractStorage(`${ethernalContract.address}/artifact`).set(ethernalContract.artifact);
-        if (storeArtifactRes) {
-            logger(storeArtifactRes);
-            return;
+        var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
+            workspace: this.db.workspace.name,
+            address: contract.address,
+            artifact: contract.artifact
+        });
+        if (!storeArtifactRes.data) {
+            return logger(storeArtifactRes);
         }
-        var storeDependenciesRes = await this.db.contractStorage(`${ethernalContract.address}/dependencies`).set(ethernalContract.dependencies);
-        if (storeDependenciesRes) {
-            logger(storeDependenciesRes);
-            return;
+
+        var storeDependenciesRes = await firebase.functions.httpsCallable('syncContractDependencies')({
+            workspace: this.db.workspace.name,
+            address: contract.address,
+            dependencies: contract.dependencies
+        });
+        if (!storeDependenciesRes.data) {
+            return logger(storeDependenciesRes);
         }
-        const res = await this.db.collection('contracts')
-            .doc(ethernalContract.address)
-            .set({
-                name: ethernalContract.name,
-                address: ethernalContract.address,
-                abi: ethernalContract.abi
-            }, { merge: true })
-        if (res) {
-            logger(res);
-            return;
+
+        var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
+            workspace: this.db.workspace.name,
+            name: contract.name,
+            address: contract.address,
+            abi: contract.abi
+        });
+        if (!contractSyncRes.data) {
+            return logger(contractSyncRes);
         }
-        logger(`Updated artifacts for contract ${ethernalContract.name} (${ethernalContract.address}), with dependencies: ${Object.keys(ethernalContract.dependencies)}`);
+
+        const dependencies = Object.entries(contract.dependencies).map(art => art[0]);
+        const dependenciesString = dependencies.length ? ` Dependencies: ${dependencies.join(', ')}` : '';
+        logger(`Updated artifacts for contract ${contract.name} (${contract.address}).${dependenciesString}`);
     }
 
     private onData(blockNumber: number, error: any) {
