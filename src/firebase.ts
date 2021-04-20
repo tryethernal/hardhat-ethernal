@@ -2,6 +2,7 @@ const firebase = require('firebase/app');
 require('firebase/firestore');
 require('firebase/auth');
 require('firebase/database');
+require('firebase/functions');
 
 import { QueryDocumentSnapshot, SnapshotOptions } from '@firebase/firestore-types';
 import { Workspace } from './types';
@@ -10,6 +11,8 @@ const { FIREBASE_CONFIG } = require('./config');
 const app = firebase.initializeApp(FIREBASE_CONFIG);
 const _db = app.firestore();
 const _rtdb = firebase.database();
+const _auth = firebase.auth;
+const _functions = firebase.functions();
 
 var _DB = class DB {
 
@@ -69,7 +72,18 @@ var _DB = class DB {
     }
 };
 
+if (process.env.NODE_ENV == 'development') {
+    _functions.useFunctionsEmulator(process.env.FUNCTIONS_HOST);
+    _auth().useEmulator(process.env.AUTH_HOST);
+
+    if (process.env.FIRESTORE_HOST) {
+        const firestoreSplit = process.env.FIRESTORE_HOST.split(':');
+        _db.useEmulator(firestoreSplit[0], firestoreSplit[1]);
+    }
+}
+
 module.exports = {
     DB: _DB,
-    auth: firebase.auth
+    auth: _auth,
+    functions: _functions
 }

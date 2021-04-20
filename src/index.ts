@@ -1,9 +1,10 @@
+import path from 'path';
+
 require("@nomiclabs/hardhat-ethers");
 import { extendConfig, extendEnvironment, task, subtask } from "hardhat/config";
 import { lazyObject, HardhatPluginError } from "hardhat/plugins";
 import { HardhatConfig, HardhatUserConfig, ActionType, RunTaskFunction } from "hardhat/types";
 import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
-import path from "path";
 
 import { Ethernal } from "./Ethernal";
 import { Artifact, ContractInput } from './types';
