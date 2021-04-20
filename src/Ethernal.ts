@@ -161,8 +161,8 @@ export class Ethernal {
             }
         }
         else {
-            this.db.currentWorkspace = await this.getDefaultWorkspace();
-            logger(`Using default workspace "${this.db.currentWorkspace.name}"`);
+            workspace = await this.getDefaultWorkspace();
+            logger(`Using default workspace "${workspace.name}"`);
         }
         this.db.workspace = workspace;
     }
