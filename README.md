@@ -26,10 +26,14 @@ That's it! Blocks and transactions will now be synchronized.
 It's possible to disable the synchronization by setting ```ethernalSync``` to ```false``` on the ```hre``` object.
 
 You can also specify which workspace you want to synchronize blocks & transactions to (default to the last one used in the dashboard).
+
+By default, transactions will be traced using ```experimentalAddHardhatNetworkMessageTraceHook```, showing CALLx and CREATEx operations in the dashboard.
+You can disable this feature with the ```ethernalTrace``` flag.
 ```js
 extendEnvironment((hre) => {
     hre.ethernalSync = true;
     hre.ethernalWorkspace = 'Workspace';
+    hre.ethernalTrace = false;
 });
 ```
 

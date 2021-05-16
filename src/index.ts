@@ -24,7 +24,6 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
 });
 
 experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceFromACall) => {
-    console.log(trace)
     let stepper = async (step: MessageTraceStep) => {
         if (isEvmStep(step) || isPrecompileTrace(step))
             return;
