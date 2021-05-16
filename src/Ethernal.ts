@@ -112,7 +112,7 @@ export class Ethernal {
     private syncBlock(block: BlockWithTransactions) {
         const promises = [];
         if (block) {
-            promises.push(firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name }).then(({ data }: { data: any }) => console.log(`Synced block #${data.blockNumber}`)));
+            promises.push(firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name }).then(({ data }: { data: any }) => logger(`Synced block #${data.blockNumber}`)));
             block.transactions.forEach((transaction: TransactionResponse) => {
                 this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => promises.push(this.syncTransaction(block, transaction, receipt)));
             });
@@ -139,7 +139,16 @@ export class Ethernal {
             transaction: transaction,
             transactionReceipt: transactionReceipt,
             workspace: this.db.workspace.name
-        }).then(({ data }: { data: any }) => console.log(`Synced transaction ${data.txHash}`));
+        })
+        .then(({ data }: { data: any }) => {
+            firebase.functions.httpsCallable('syncTrace')({
+                workspace: this.db.workspace.name,
+                txHash: transaction.hash,
+                steps: this.env.ethernalSteps
+            })
+            .catch(logger)
+            .finally(() => this.env.ethernalSteps = []);
+        });
     }
 
     private async getDefaultWorkspace() {

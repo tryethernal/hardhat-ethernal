@@ -32,7 +32,9 @@ declare module "hardhat/types/runtime" {
   export interface HardhatRuntimeEnvironment {
     ethers: any;
     ethernalSync: boolean;
+    ethernalTrace: boolean;
     ethernalWorkspace: string;
+    ethernalSteps: any[];
     ethernal: {
         startListening:() => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
