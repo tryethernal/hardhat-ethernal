@@ -6,6 +6,8 @@ import "hardhat/types/runtime";
 
 import { Ethernal } from "./Ethernal";
 import { ContractInput } from './types';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { MessageTraceStep } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
 declare module "hardhat/types/config" {
   // This is an example of an extension to one of the Hardhat config values.
@@ -34,9 +36,9 @@ declare module "hardhat/types/runtime" {
     ethernalSync: boolean;
     ethernalTrace: boolean;
     ethernalWorkspace: string;
-    ethernalSteps: any[];
     ethernal: {
         startListening:() => Promise<void>;
+        traceHandler:(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
     }
   }

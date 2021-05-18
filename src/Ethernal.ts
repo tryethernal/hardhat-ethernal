@@ -3,6 +3,7 @@ import { sep } from "path";
 import { HardhatRuntimeEnvironment, ResolvedFile, Artifacts } from "hardhat/types";
 import { ContractInput, EthernalContract, Artifact, SyncedBlock } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
+import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
 const path = require('path');
 const credentials = require('./credentials');
@@ -16,10 +17,12 @@ export class Ethernal {
     public env: HardhatRuntimeEnvironment;
     private targetContract!: ContractInput;
     private db: any;
+    private trace: any[];
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
         this.db = new firebase.DB();
+        this.trace = [];
     }
 
     public async startListening() {
@@ -79,10 +82,55 @@ export class Ethernal {
         logger(`Updated artifacts for contract ${contract.name} (${contract.address}).${dependenciesString}`);
     }
 
+    public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
+        if (!this.db.userId) { return; }
+        if (this.db.workspace.advancedOptions?.tracing != 'hardhat') return;
+
+        logger('Tracing transaction...');
+        let stepper = async (step: MessageTraceStep) => {
+            if (isEvmStep(step) || isPrecompileTrace(step))
+                return;
+            if (isCreateTrace(step) && step.deployedContract) {
+                const address = `0x${step.deployedContract.toString('hex')}`;
+                const bytecode = await this.env.ethers.provider.getCode(address);
+                this.trace.push({
+                    op: 'CREATE2',
+                    contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
+                    address: address,
+                    depth: step.depth
+                });
+            }
+            if (isCallTrace(step)) {
+                const address = `0x${step.address.toString('hex')}`;
+                const bytecode = await this.env.ethers.provider.getCode(address);
+                this.trace.push({
+                    op: 'CALL',
+                    contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
+                    address: address,
+                    input: step.calldata.toString('hex'),
+                    depth: step.depth
+                });
+            }
+            for (var i = 0; i < step.steps.length; i++) {
+                await stepper(step.steps[i]);
+            }
+        };
+
+        if (this.trace) {
+            this.trace = [];
+            if (!isEvmStep(trace) && !isPrecompileTrace(trace)) {
+                for (const step of trace.steps) {
+                    stepper(step);
+                }
+            }
+        }
+    }
+
     private onData(blockNumber: number, error: any) {
         if (error && error.reason) {
             return logger(`Error while receiving data: ${error.reason}`);
         }
+
         this.env.ethers.provider.getBlockWithTransactions(blockNumber).then((block: BlockWithTransactions) => this.syncBlock(block));
     }
 
@@ -141,13 +189,15 @@ export class Ethernal {
             workspace: this.db.workspace.name
         })
         .then(({ data }: { data: any }) => {
-            firebase.functions.httpsCallable('syncTrace')({
-                workspace: this.db.workspace.name,
-                txHash: transaction.hash,
-                steps: this.env.ethernalSteps
-            })
-            .catch(logger)
-            .finally(() => this.env.ethernalSteps = []);
+            if (this.trace && this.trace.length) {
+                firebase.functions.httpsCallable('syncTrace')({
+                    workspace: this.db.workspace.name,
+                    txHash: transaction.hash,
+                    steps: this.trace
+                })
+                .catch(logger)
+                .finally(() => this.trace = []);
+            }
         });
     }
 
