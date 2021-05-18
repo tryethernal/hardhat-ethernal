@@ -4,7 +4,6 @@ require("@nomiclabs/hardhat-ethers");
 import { extendConfig, extendEnvironment, task, subtask, experimentalAddHardhatNetworkMessageTraceHook } from "hardhat/config";
 import { lazyObject, HardhatPluginError } from "hardhat/plugins";
 import { HardhatConfig, HardhatUserConfig, ActionType, RunTaskFunction, HardhatRuntimeEnvironment } from "hardhat/types";
-import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
 
 import { Ethernal } from "./Ethernal";
@@ -16,49 +15,16 @@ import "./type-extensions";
 export const PluginName = 'hardhat-ethernal';
 
 subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
-    if (hre.ethernalSync)
+    if (hre.ethernalSync) {
         hre.ethernal.startListening();
+    }
     else
         console.log('[Ethernal] Not syncing')
     await runSuper(args);
 });
 
 experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceFromACall) => {
-    let stepper = async (step: MessageTraceStep) => {
-        if (isEvmStep(step) || isPrecompileTrace(step))
-            return;
-        if (isCreateTrace(step) && step.deployedContract) {
-            const address = `0x${step.deployedContract.toString('hex')}`;
-            const bytecode = await hre.ethers.provider.getCode(address);
-            hre.ethernalSteps.push({
-                op: 'CREATE2',
-                contractHashedBytecode: hre.ethers.utils.keccak256(bytecode),
-                address: address,
-                depth: step.depth
-            });
-        }
-        if (isCallTrace(step)) {
-            const address = `0x${step.address.toString('hex')}`;
-            hre.ethernalSteps.push({
-                op: 'CALL',
-                address: address,
-                input: step.calldata.toString('hex'),
-                depth: step.depth
-            });
-        }
-        for (var i = 0; i < step.steps.length; i++) {
-            await stepper(step.steps[i]);
-        }
-    };
-
-    if (hre.ethernalTrace) {
-        hre.ethernalSteps = [];
-        if (!isEvmStep(trace) && !isPrecompileTrace(trace)) {
-            for (const step of trace.steps) {
-                stepper(step);
-            }
-        }
-    }
+    hre.ethernal.traceHandler(trace, isMessageTraceFromACall);
 });
 
 extendConfig(
