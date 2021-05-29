@@ -1,0 +1,55 @@
+name: Build, Release & Publish
+
+on:
+  push:
+    tags:
+    - 'v*' 
+
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install deps
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+      - name: Get tag
+        id: get_tag
+        run: |
+          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/v}
+        shell: bash
+
+      - name: Get Changelog Entry
+        id: get_changelog
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_depth: 10
+          version: ${{ steps.get_tag.outputs.current_version }}
+          path: ./CHANGELOG.md
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          body: ${{ steps.get_changelog.outputs.changes }}
+          owner: tryethernal
+          repo: hardhat-ethernal-test
+          tag: ${{ steps.get_changelog.outputs.version }}
+          token: ${{ secrets.PUSH_TO_HET_TOKEN }}        
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
