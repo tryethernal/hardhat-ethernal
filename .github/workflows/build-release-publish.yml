@@ -1,0 +1,51 @@
+name: Build, Release & Publish
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  build-release-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+
+      - name: Read package.json
+        uses: martinbeentjes/npm-get-version-action@master
+        id: read_package_json
+
+      - name: Install deps
+        run: yarn
+
+      - name: Build plugin
+        run: yarn build
+
+      - name: Get Changelog Entry
+        id: get_changelog
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_depth: 10
+          version: ${{ steps.get_tag.outputs.current_version }}
+          path: ./CHANGELOG.md
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          body: ${{ steps.get_changelog.outputs.changes }}
+          tag: v${{ steps.read_package_json.outputs.current-version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish on NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
