@@ -31,6 +31,8 @@ jobs:
 
       - name: Update package version
         run: npm version ${{ steps.get_tag.outputs.current_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
 
       - name: Build plugin
         run: yarn build
@@ -53,4 +55,4 @@ jobs:
 
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
