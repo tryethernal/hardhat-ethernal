@@ -2,8 +2,8 @@ name: Build, Release & Publish
 
 on:
   push:
-    tags:
-    - 'v*' 
+    branches:
+      - env-for-config
 
   workflow_dispatch:
 
@@ -28,12 +28,6 @@ jobs:
 
       - name: Install deps
         run: yarn
-
-      - name: Update package version
-        run: |
-          git config --global user.email "antoine@tryethernal.com"
-          git config --global user.name "Antoine"
-          npm version ${{ steps.get_tag.outputs.current_version }}
 
       - name: Build plugin
         run: yarn build
