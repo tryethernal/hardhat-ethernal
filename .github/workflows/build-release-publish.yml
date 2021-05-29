@@ -43,10 +43,10 @@ jobs:
         with:
           allowUpdates: true
           body: ${{ steps.get_changelog.outputs.changes }}
-          tag: ${{ steps.read_package_json.outputs.current-version }}
+          tag: v${{ steps.read_package_json.outputs.current-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish on NPM
-        run: publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
