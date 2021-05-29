@@ -3,7 +3,7 @@ name: Build, Release & Publish
 on:
   push:
     branches:
-      - env-for-config
+      - master
 
   workflow_dispatch:
 
@@ -45,7 +45,7 @@ jobs:
           tag: v${{ steps.read_package_json.outputs.current-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Publish on NPM
-      #   run: npm publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+      - name: Publish on NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
