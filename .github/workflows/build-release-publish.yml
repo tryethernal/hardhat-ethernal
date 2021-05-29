@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish-npm:
+  build-release-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,7 +23,7 @@ jobs:
       - name: Install deps
         run: yarn
 
-      - name: Build
+      - name: Build plugin
         run: yarn build
 
       - name: Get tag
@@ -45,11 +45,9 @@ jobs:
         with:
           allowUpdates: true
           body: ${{ steps.get_changelog.outputs.changes }}
-          owner: tryethernal
-          repo: hardhat-ethernal-test
           tag: ${{ steps.get_changelog.outputs.version }}
-          token: ${{ secrets.PUSH_TO_HET_TOKEN }}        
+          token: ${{ secrets.GITHUB_TOKEN }}        
 
-      # - run: npm publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
