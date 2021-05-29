@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.3] - 2021-05-29
 ### Added
-- Build system: when a tag is pushed, a Github Action is going to build the plugin, tag the commit, create a release, and publish to NPM
+- Build system: when a new version is merged on master, a Github Action is going to build the plugin, create a release, and publish to NPM
 
 ### Changed
 - Firebase config can now be set through environment variables. This makes it easier to connect to a custom Firebase backend (better ux for self hosted deployments).
