@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.3] - 2021-05-29
+## [v0.3.5] - 2021-05-29
+### Fixed
+- Changelog parsing when releasing new version
+
+## [v0.3.4] - 2021-05-29
+### Fixed
+- Default Firebase variables
+
+## [v0.3.3] - 2021-05-29
 ### Added
 - Build system: when a new version is merged on master, a Github Action is going to build the plugin, create a release, and publish to NPM
 

@@ -30,15 +30,15 @@ jobs:
       - name: Build plugin
         run: yarn build
 
-      - name: Get Changelog Entry
+      - name: Get changelog entry
         id: get_changelog
         uses: mindsers/changelog-reader-action@v2
         with:
-          validation_depth: 10
-          version: ${{ steps.get_tag.outputs.current_version }}
+          validation_depth: 'version'
+          version: v${{ steps.read_package_json.outputs.current-version }}
           path: ./CHANGELOG.md
 
-      - name: Create Release
+      - name: Create release
         uses: ncipollo/release-action@v1
         with:
           body: ${{ steps.get_changelog.outputs.changes }}
