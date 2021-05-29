@@ -3,7 +3,7 @@ name: Build, Release & Publish
 on:
   push:
     branches:
-      - env-for-config
+      - master
 
   workflow_dispatch:
 
