@@ -21,7 +21,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: Read package.json
-        uses: dutscher/read-package-json-endpoint-actions@v1.33.7
+        uses: martinbeentjes/npm-get-version-action@master
         id: read_package_json
 
       - name: Install deps
@@ -43,7 +43,7 @@ jobs:
         with:
           allowUpdates: true
           body: ${{ steps.get_changelog.outputs.changes }}
-          tag: ${{ steps.read_package_json.outputs.version }}
+          tag: ${{ steps.read_package_json.outputs.current-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: Publish on NPM
