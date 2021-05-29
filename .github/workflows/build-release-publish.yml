@@ -3,7 +3,7 @@ name: Build, Release & Publish
 on:
   push:
     branches:
-      - master
+      - env-for-config
 
   workflow_dispatch:
 
@@ -35,17 +35,17 @@ jobs:
         uses: mindsers/changelog-reader-action@v2
         with:
           validation_depth: 10
-          version: ${{ steps.get_tag.outputs.current_version }}
+          version: v${{ steps.read_package_json.outputs.current-version }}
           path: ./CHANGELOG.md
 
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          body: ${{ steps.get_changelog.outputs.changes }}
-          tag: v${{ steps.read_package_json.outputs.current-version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create Release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     body: ${{ steps.get_changelog.outputs.changes }}
+      #     tag: v${{ steps.read_package_json.outputs.current-version }}
+      #     token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish on NPM
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+      # - name: Publish on NPM
+      #   run: npm publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
