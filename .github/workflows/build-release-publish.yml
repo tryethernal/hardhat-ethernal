@@ -14,17 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      - name: Get tag
-        id: get_tag
-        run: |
-          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/v}
-        shell: bash
+      - name: Read package.json
+        uses: dutscher/read-package-json-endpoint-actions@v1.33.7
+        id: read_package_json
 
       - name: Install deps
         run: yarn
@@ -45,9 +43,9 @@ jobs:
         with:
           allowUpdates: true
           body: ${{ steps.get_changelog.outputs.changes }}
-          tag: ${{ steps.get_changelog.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}        
+          tag: ${{ steps.read_package_json.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: npm publish
+      - run: Publish on NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
