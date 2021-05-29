@@ -46,6 +46,7 @@ jobs:
           tag: ${{ steps.read_package_json.outputs.current-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: Publish on NPM
+      - name: Publish on NPM
+        run: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
