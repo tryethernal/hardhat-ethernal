@@ -20,17 +20,20 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      - name: Install deps
-        run: yarn
-
-      - name: Build plugin
-        run: yarn build
-
       - name: Get tag
         id: get_tag
         run: |
           echo ::set-output name=current_version::${GITHUB_REF#refs/tags/v}
         shell: bash
+
+      - name: Install deps
+        run: yarn
+
+      - name: Update package version
+        run: npm version ${{ steps.get_tag.outputs.current_version }}
+
+      - name: Build plugin
+        run: yarn build
 
       - name: Get Changelog Entry
         id: get_changelog
