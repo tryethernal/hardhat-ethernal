@@ -2,7 +2,7 @@
   "name": "hardhat-ethernal",
   "version": "0.3.3",
   "description": "Ethernal Hardhat plugin",
-  "repository": "github:antoinedc/ethernal-hardhat",
+  "repository": "github:tryethernal/ethernal-hardhat",
   "author": "Antoine de Chevigné",
   "license": "MIT",
   "main": "dist/src/index.js",

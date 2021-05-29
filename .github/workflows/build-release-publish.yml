@@ -41,7 +41,6 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          allowUpdates: true
           body: ${{ steps.get_changelog.outputs.changes }}
           tag: v${{ steps.read_package_json.outputs.current-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
