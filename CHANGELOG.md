@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.6] - 2021-06-02
+### Fixed
+- Send dependencies one by one, to avoid Firebase payload limitation
+
 ## [v0.3.5] - 2021-05-29
 ### Fixed
 - Changelog parsing when releasing new version
