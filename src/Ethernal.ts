@@ -58,14 +58,17 @@ export class Ethernal {
             return logger(storeArtifactRes);
         }
 
-        var storeDependenciesRes = await firebase.functions.httpsCallable('syncContractDependencies')({
-            workspace: this.db.workspace.name,
-            address: contract.address,
-            dependencies: contract.dependencies
-        });
-        if (!storeDependenciesRes.data) {
-            return logger(storeDependenciesRes);
-        }
+        const dependenciesPromises = [];
+        for (const dep in contract.dependencies)
+            dependenciesPromises.push(
+                    firebase.functions.httpsCallable('syncContractDependencies')({
+                        workspace: this.db.workspace.name,
+                        address: contract.address,
+                        dependencies: { [dep]: contract.dependencies[dep] }
+                    })
+            );
+        
+        await Promise.all(dependenciesPromises);
 
         var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
             workspace: this.db.workspace.name,
