@@ -232,6 +232,7 @@ export class Ethernal {
     private async login() {
         try {
             var email = await credentials.getEmail();
+
             if (!email) {
                 return logger('You are not logged in, please run "ethernal login".')
             }
@@ -247,6 +248,7 @@ export class Ethernal {
             return user;
         }
         catch(_error) {
+            logger(_error);
             logger('Error while retrieving your credentials, please run "ethernal login"');
         }
     }
