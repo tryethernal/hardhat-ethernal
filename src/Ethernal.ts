@@ -206,7 +206,12 @@ export class Ethernal {
 
     private async getDefaultWorkspace() {
         var currentUser = await this.db.currentUser().get();
-        var defaultWorkspace = await currentUser.data().currentWorkspace.get();
+        var data = await currentUser.data();
+        if (!data.currentWorkspace) {
+            throw new Error("Please create a workspace first.");
+        }
+        
+        var defaultWorkspace = await data.currentWorkspace.get();
         return { ...defaultWorkspace.data(), name: defaultWorkspace.id };
     }
 
