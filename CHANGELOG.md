@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.8] - 2021-07-25
+### Fixed
+- Fails gracefully when the plugin is called and no workspace has been created yet. Thanks @ShaunLWM for the PR!
+
 ## [v0.3.7] - 2021-07-22
 ### Added
 - Allows logging in using ETHERNAL_EMAIL & ETHERNAL_PASSWORD env variables instead of configstore and keytar
