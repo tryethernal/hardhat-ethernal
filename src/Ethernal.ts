@@ -26,8 +26,8 @@ export class Ethernal {
     }
 
     public async startListening() {
-        await this.setLocalEnvironment();
-        if (!this.db.userId) { return; }
+        const envSet = await this.setLocalEnvironment();
+        if (!envSet) { return; }
 
         this.env.ethers.provider.on('block', (blockNumber: number, error: any) => this.onData(blockNumber, error));
         this.env.ethers.provider.on('error', (error: any) => this.onError(error));
@@ -35,8 +35,8 @@ export class Ethernal {
     }
 
     public async push(targetContract: ContractInput) {
-        await this.setLocalEnvironment(); 
-        if (!this.db.userId) { return; }
+        const envSet = await this.setLocalEnvironment();
+        if (!envSet) { return; }
 
         this.targetContract = targetContract;
         if (!this.targetContract.name || !this.targetContract.address) {
@@ -147,13 +147,13 @@ export class Ethernal {
     }
 
     private async setLocalEnvironment() {
-        if (this.db.userId) { return; }
+        if (this.db.userId) { return false; }
         const user = await this.login();
-        if (!user) { return; }
+        if (!user) { return false; }
         await this.setWorkspace();
-        if (!this.db.workspace) {
-            return logger(`Error while setting the workspace. Workspace data: ${this.db.workspace}`);
-        }
+        if (!this.db.workspace)
+            return false;
+        return true;
     }
 
     private onPending() {
@@ -208,7 +208,7 @@ export class Ethernal {
         var currentUser = await this.db.currentUser().get();
         var data = await currentUser.data();
         if (!data.currentWorkspace) {
-            throw new Error("Please create a workspace first.");
+            throw new Error('Please create a workspace first on https://app.tryethernal.com.');
         }
         
         var defaultWorkspace = await data.currentWorkspace.get();
@@ -216,22 +216,26 @@ export class Ethernal {
     }
 
     private async setWorkspace() {
-        let workspace: any = {};
-        if (this.env.ethernalWorkspace) {
-            workspace = await this.db.getWorkspace(this.env.ethernalWorkspace);
-            if (!workspace) {
-                workspace = await this.getDefaultWorkspace();
-                logger(`Could not find workspace "${this.env.ethernalWorkspace}", defaulting to ${workspace.name}`);
+        try {
+            let workspace: any = {};
+            if (this.env.ethernalWorkspace) {
+                workspace = await this.db.getWorkspace(this.env.ethernalWorkspace);
+                if (!workspace) {
+                    workspace = await this.getDefaultWorkspace();
+                    logger(`Could not find workspace "${this.env.ethernalWorkspace}", defaulting to ${workspace.name}`);
+                }
+                else {
+                    logger(`Using workspace "${workspace.name}"`);
+                }
             }
             else {
-                logger(`Using workspace "${workspace.name}"`);
+                workspace = await this.getDefaultWorkspace();
+                logger(`Using default workspace "${workspace.name}"`);
             }
+            this.db.workspace = workspace;
+        } catch(error) {
+            logger(error.message || 'Error while setting the workspace.');
         }
-        else {
-            workspace = await this.getDefaultWorkspace();
-            logger(`Using default workspace "${workspace.name}"`);
-        }
-        this.db.workspace = workspace;
     }
 
     private async login() {
