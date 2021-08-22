@@ -42,13 +42,13 @@ export class Ethernal {
         if (!this.targetContract.name || !this.targetContract.address) {
             return logger('Contract name and address are mandatory');
         }
-        
+
         const contract = await this.getFormattedArtifact(targetContract);
 
         if (!contract) {
             return;
         }
-        
+
         var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
             workspace: this.db.workspace.name,
             address: contract.address,
@@ -67,7 +67,7 @@ export class Ethernal {
                         dependencies: { [dep]: contract.dependencies[dep] }
                     })
             );
-        
+
         await Promise.all(dependenciesPromises);
 
         var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
@@ -147,7 +147,7 @@ export class Ethernal {
     }
 
     private async setLocalEnvironment() {
-        if (this.db.userId) { return false; }
+        if (this.db.userId) { return true; }
         const user = await this.login();
         if (!user) { return false; }
         await this.setWorkspace();
