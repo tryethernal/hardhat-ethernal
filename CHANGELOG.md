@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.11] - 2021-12-21
+### Added
+- Return method result in transaction tracing.
+
 ## [v0.3.10] - 2021-08-22
 ### Fixed
 - Bug that prevented calling the push functions multiple times in the same Ethernal instance.
