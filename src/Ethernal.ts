@@ -111,7 +111,8 @@ export class Ethernal {
                     contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
                     address: address,
                     input: step.calldata.toString('hex'),
-                    depth: step.depth
+                    depth: step.depth,
+                    returnData: step.returnData.toString('hex')
                 });
             }
             for (var i = 0; i < step.steps.length; i++) {
