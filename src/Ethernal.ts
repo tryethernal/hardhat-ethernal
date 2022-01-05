@@ -58,18 +58,6 @@ export class Ethernal {
             return logger(storeArtifactRes);
         }
 
-        const dependenciesPromises = [];
-        for (const dep in contract.dependencies)
-            dependenciesPromises.push(
-                    firebase.functions.httpsCallable('syncContractDependencies')({
-                        workspace: this.db.workspace.name,
-                        address: contract.address,
-                        dependencies: { [dep]: contract.dependencies[dep] }
-                    })
-            );
-
-        await Promise.all(dependenciesPromises);
-
         var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
             workspace: this.db.workspace.name,
             name: contract.name,
@@ -78,6 +66,21 @@ export class Ethernal {
         });
         if (!contractSyncRes.data) {
             return logger(contractSyncRes);
+        }
+
+        try {
+            const dependenciesPromises = [];
+            for (const dep in contract.dependencies)
+                dependenciesPromises.push(
+                        firebase.functions.httpsCallable('syncContractDependencies')({
+                            workspace: this.db.workspace.name,
+                            address: contract.address,
+                            dependencies: { [dep]: contract.dependencies[dep] }
+                        })
+                );
+            await Promise.all(dependenciesPromises);
+        } catch(error) {
+            logger(`Couldn't sync dependencies: ${error.message}`);
         }
 
         const dependencies = Object.entries(contract.dependencies).map(art => art[0]);

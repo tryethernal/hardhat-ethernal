@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.12] - 2022-01-05
+### Changed
+- If dependencies fail to upload (often due to file size) when pushing artifacts, it won't make the whole thing fail. Contract abi/name will still be pushed. Only storage reading won't be available
+
 ## [v0.3.11] - 2021-12-21
 ### Added
 - Return method result in transaction tracing.
