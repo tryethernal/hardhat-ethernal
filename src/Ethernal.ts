@@ -89,8 +89,11 @@ export class Ethernal {
     }
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
-        if (!this.db.userId) { return; }
-        if (this.db.workspace.advancedOptions?.tracing != 'hardhat') return;
+        await this.setLocalEnvironment();
+
+        if (!this.db.userId || this.db.workspace?.advancedOptions?.tracing != 'hardhat') {
+            return logger('Plugin is not initialized yet');
+        };
 
         logger('Tracing transaction...');
         let stepper = async (step: MessageTraceStep) => {
@@ -151,7 +154,7 @@ export class Ethernal {
     }
 
     private async setLocalEnvironment() {
-        if (this.db.userId) { return true; }
+        if (this.db.userId && this.db.workspace) { return true; }
         const user = await this.login();
         if (!user) { return false; }
         await this.setWorkspace();
