@@ -5,8 +5,8 @@
   "repository": "github:tryethernal/ethernal-hardhat",
   "author": "Antoine de Chevigné",
   "license": "MIT",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "keywords": [
     "ethereum",
     "smart-contracts",
@@ -42,11 +42,11 @@
   },
   "dependencies": {
     "@firebase/firestore-types": "^2.2.0",
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-ethers": "^2.0.5",
     "configstore": "^5.0.1",
+    "ethers": "^5.5.4",
     "firebase": "^8.2.6",
-    "fs-extra": "^9.1.0",
-    "hardhat": "^2.6.1",
+    "hardhat": "^2.8.3",
     "keytar": "^7.3.0"
   }
 }

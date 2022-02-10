@@ -1,11 +1,8 @@
-import * as fs from "fs-extra";
-import { sep } from "path";
-import { HardhatRuntimeEnvironment, ResolvedFile, Artifacts } from "hardhat/types";
-import { ContractInput, EthernalContract, Artifact, SyncedBlock } from './types';
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { ContractInput, EthernalContract } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
-const path = require('path');
 const credentials = require('./credentials');
 const firebase = require('./firebase');
 
@@ -90,10 +87,8 @@ export class Ethernal {
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
         await this.setLocalEnvironment();
-
-        if (!this.db.userId || this.db.workspace?.advancedOptions?.tracing != 'hardhat') {
-            return logger('Plugin is not initialized yet');
-        };
+        const envSet = await this.setLocalEnvironment();
+        if (!envSet) { return; }
 
         logger('Tracing transaction...');
         let stepper = async (step: MessageTraceStep) => {

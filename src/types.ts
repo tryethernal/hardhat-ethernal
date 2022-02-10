@@ -1,11 +1,5 @@
 import { BlockWithTransactions } from '@ethersproject/abstract-provider';
 
-export type Artifact = {
-    contractName: string;
-    abi: any;
-    ast: any;
-}
-
 export interface ContractInput {
     name: string;
     address: string;
