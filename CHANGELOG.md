@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [V0.4.0] - 2022-02-11
+### Fixed
+- Conflict with typechain
+- Custom flagging to control tracing/syncing
+
+### Removed
+- A lot of boilerplate code & files
+
 ## [v0.3.13] - 2022-02-04
 ### Fixed
 - Plugin was crashing if the traceHandler was called before the plugin was completely initialized
