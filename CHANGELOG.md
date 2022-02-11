@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [V0.4.0] - 2022-02-11
+## [v0.4.0] - 2022-02-11
 ### Fixed
 - Conflict with typechain
 - Custom flagging to control tracing/syncing
