@@ -21,7 +21,7 @@ experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceF
 });
 
 extendEnvironment((hre) => {
-  hre.ethernalSync = hre.ethernalSync ? hre.ethernalSync : true;
-  hre.ethernalTrace = hre.ethernalTrace ? hre.ethernalTrace : true;
+  hre.ethernalSync = hre.ethernalSync !== undefined ? hre.ethernalSync : true;
+  hre.ethernalTrace = hre.ethernalTrace !== undefined ? hre.ethernalTrace : true;
   hre.ethernal = lazyObject(() => new Ethernal(hre));
 });
