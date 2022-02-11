@@ -86,9 +86,11 @@ export class Ethernal {
     }
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
+        if (!this.env.ethernalTrace) return;
+
         await this.setLocalEnvironment();
         const envSet = await this.setLocalEnvironment();
-        if (!envSet) { return; }
+        if (!envSet) return;
 
         logger('Tracing transaction...');
         let stepper = async (step: MessageTraceStep) => {
