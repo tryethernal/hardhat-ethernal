@@ -13,10 +13,12 @@ declare module "hardhat/types/runtime" {
     ethernalSync: boolean;
     ethernalTrace: boolean;
     ethernalWorkspace: string;
+    ethernalResetOnStart: string;
     ethernal: {
         startListening:() => Promise<void>;
         traceHandler:(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
+        resetWorkspace: (workspace: string) => Promise<void>;
     }
   }
 }

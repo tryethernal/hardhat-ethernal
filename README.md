@@ -35,11 +35,14 @@ You can also specify which workspace you want to synchronize blocks & transactio
 
 By default, transactions will be traced using ```experimentalAddHardhatNetworkMessageTraceHook```, showing CALLx and CREATEx operations in the dashboard.
 You can disable this feature with the ```ethernalTrace``` flag.
+
+You can automatically reset your workspace by setting the `ethernalResetOnStart` property to the name of the workspace. Everytime the node starts, all accounts/blocks/transactions/contracts will be deleted.
 ```js
 extendEnvironment((hre) => {
     hre.ethernalSync = true;
     hre.ethernalWorkspace = 'Workspace';
     hre.ethernalTrace = false;
+    hre.ethernalResetOnStart = 'Hardhat';
 });
 ```
 
@@ -65,3 +68,7 @@ The following fields will be synchronized:
 - abi
 - ast
 - source
+
+## Reset a workspace
+
+You can manually reset a workspace by calling: `hre.ethernal.resetWorkspace(workspaceName)` (async function). All accounts/blocks/transactions/contracts will be deleted;

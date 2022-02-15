@@ -26,6 +26,9 @@ export class Ethernal {
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
 
+        if (this.env.ethernalResetOnStart)
+            await this.resetWorkspace(this.env.ethernalResetOnStart);
+
         this.env.ethers.provider.on('block', (blockNumber: number, error: any) => this.onData(blockNumber, error));
         this.env.ethers.provider.on('error', (error: any) => this.onError(error));
         this.env.ethers.provider.on('pending', () => this.onPending());
@@ -130,6 +133,19 @@ export class Ethernal {
                     stepper(step);
                 }
             }
+        }
+    }
+
+    public async resetWorkspace(workspace: string) {
+        const envSet = await this.setLocalEnvironment();
+        if (!envSet) { return; }
+
+        logger(`Resetting workspace "${workspace}"...`);
+        try {
+            await firebase.functions.httpsCallable('resetWorkspace')({ workspace: workspace });
+            logger(`Workspace "${workspace}" has been reset!`);
+        } catch(error) {
+            logger(`Error while resetting workspace "${workspace}": ${error.message}`);
         }
     }
 
