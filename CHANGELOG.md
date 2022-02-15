@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.5.0] - 2022-02-15
+### Added
+- Set `hre.ethernalResetOnStart = 'workspaceName'` in your Hardhat config file to automatically reset this workspace when the node starts.
+- Function `hre.ethernal.resetWorkspace(workspaceName)` to manually reset a workspace
+
 ## [v0.4.1] - 2022-02-13
 ### Fixed
 - package.json config
