@@ -1,6 +1,6 @@
 {
   "name": "hardhat-ethernal",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Ethernal Hardhat plugin",
   "repository": "github:tryethernal/ethernal-hardhat",
   "author": "Antoine de Chevigné",
@@ -21,8 +21,7 @@
     "watch": "tsc -w"
   },
   "files": [
-    "dist/src/",
-    "src/",
+    "dist/",
     "LICENSE",
     "README.md"
   ],
