@@ -79,7 +79,7 @@ export class Ethernal {
                         })
                 );
             await Promise.all(dependenciesPromises);
-        } catch(error) {
+        } catch(error: any) {
             logger(`Couldn't sync dependencies: ${error.message}`);
         }
 
@@ -144,7 +144,7 @@ export class Ethernal {
         try {
             await firebase.functions.httpsCallable('resetWorkspace')({ workspace: workspace });
             logger(`Workspace "${workspace}" has been reset!`);
-        } catch(error) {
+        } catch(error: any) {
             logger(`Error while resetting workspace "${workspace}": ${error.message}`);
         }
     }
@@ -253,7 +253,7 @@ export class Ethernal {
                 logger(`Using default workspace "${workspace.name}"`);
             }
             this.db.workspace = workspace;
-        } catch(error) {
+        } catch(error: any) {
             logger(error.message || 'Error while setting the workspace.');
         }
     }
