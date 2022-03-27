@@ -14,6 +14,7 @@ declare module "hardhat/types/runtime" {
     ethernalTrace: boolean;
     ethernalWorkspace: string;
     ethernalResetOnStart: string;
+    ethernalUploadAst: boolean;
     ethernal: {
         startListening:() => Promise<void>;
         traceHandler:(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) => Promise<void>;

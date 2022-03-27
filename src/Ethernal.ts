@@ -49,13 +49,16 @@ export class Ethernal {
             return;
         }
 
-        var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
-            workspace: this.db.workspace.name,
-            address: contract.address,
-            artifact: contract.artifact
-        });
-        if (!storeArtifactRes.data) {
-            return logger(storeArtifactRes);
+        if (this.env.ethernalUploadAst) {
+            logger('Uploading contract AST, this might take a while depending on the size of your contract.');
+            var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
+                workspace: this.db.workspace.name,
+                address: contract.address,
+                artifact: contract.artifact
+            });
+            if (!storeArtifactRes.data) {
+                return logger(storeArtifactRes);
+            }
         }
 
         var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
@@ -68,19 +71,22 @@ export class Ethernal {
             return logger(contractSyncRes);
         }
 
-        try {
-            const dependenciesPromises = [];
-            for (const dep in contract.dependencies)
-                dependenciesPromises.push(
-                        firebase.functions.httpsCallable('syncContractDependencies')({
-                            workspace: this.db.workspace.name,
-                            address: contract.address,
-                            dependencies: { [dep]: contract.dependencies[dep] }
-                        })
-                );
-            await Promise.all(dependenciesPromises);
-        } catch(error: any) {
-            logger(`Couldn't sync dependencies: ${error.message}`);
+        if (this.env.ethernalUploadAst) {
+            logger('Uploading dependencies ASTs, this might take a while depending on the size of your contracts.');
+            try {
+                const dependenciesPromises = [];
+                for (const dep in contract.dependencies)
+                    dependenciesPromises.push(
+                            firebase.functions.httpsCallable('syncContractDependencies')({
+                                workspace: this.db.workspace.name,
+                                address: contract.address,
+                                dependencies: { [dep]: contract.dependencies[dep] }
+                            })
+                    );
+                await Promise.all(dependenciesPromises);
+            } catch(error: any) {
+                logger(`Couldn't sync dependencies: ${error.message}`);
+            }
         }
 
         const dependencies = Object.entries(contract.dependencies).map(art => art[0]);
