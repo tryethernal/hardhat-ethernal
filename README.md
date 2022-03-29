@@ -63,11 +63,8 @@ await hre.ethernal.push({
     address: greeter.address
 });
 ```
-The following fields will be synchronized:
-- contractName
-- abi
-- ast
-- source
+
+By default, the push function is not going to upload AST to Ethernal. If you want to use "Storage" tab on contracts pages, you'll need to activate it. To do so, set the ```hre.ethernalUploadAst = true``` flag in your Hardhat config file (this will upload the ast field, as well as the source field).
 
 ## Reset a workspace
 
