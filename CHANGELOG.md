@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 Updated README
 
+## [v0.7.0] - 2022-03-27
+### Changed
+- AST upload is now disabled by default. To enable it `hre.ethernalUploadAst` needs to be set to true in hardhat.config.js.
+
+## [v0.6.0] - 2022-03-24
+### Fixed
+- Dependencies
+
 ## [v0.5.1] - 2022-03-24
 ### Fixed
 - Reorganized dependencies to fix conflicts with hardhat-deploy
