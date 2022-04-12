@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 Updated README
 
+## [v0.7.1] - 2022-04-12
+### Changed
+- Start syncing transactions when the block has been synced. If block syncing fails, tx won't be synced.
+
 ## [v0.7.0] - 2022-03-27
 ### Changed
 - AST upload is now disabled by default. To enable it `hre.ethernalUploadAst` needs to be set to true in hardhat.config.js.
