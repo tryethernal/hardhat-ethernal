@@ -187,14 +187,16 @@ export class Ethernal {
     }
 
     private syncBlock(block: BlockWithTransactions) {
-        const promises = [];
         if (block) {
-            promises.push(firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name }).then(({ data }: { data: any }) => logger(`Synced block #${data.blockNumber}`)));
-            block.transactions.forEach((transaction: TransactionResponse) => {
-                this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => promises.push(this.syncTransaction(block, transaction, receipt)));
-            });
+            firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name })
+                .then(({ data }: { data: any }) => {
+                    logger(`Synced block #${data.blockNumber}`);
+                    for (let i = 0; i < block.transactions.length; i++) {
+                        const transaction = block.transactions[i];
+                        this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => this.syncTransaction(block, transaction, receipt));
+                    }
+                });
         }
-        return Promise.all(promises);
     }
 
     private stringifyBns(obj: any) {
