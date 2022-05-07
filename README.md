@@ -69,3 +69,7 @@ By default, the push function is not going to upload AST to Ethernal. If you wan
 ## Reset a workspace
 
 You can manually reset a workspace by calling: `hre.ethernal.resetWorkspace(workspaceName)` (async function). All accounts/blocks/transactions/contracts will be deleted;
+
+## Disable Ethernal globally
+
+To prevent Ethernal from syncing, and to disable `ethernal.push`, the `disableEthernal` flag can be set to `true` one the Hardhat config object. This can be useful in test environment, for example.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 Updated README
 
+## [v0.8.0] - 2022-04-12
+### Added
+- `disableEthernal` flag on Hardhat config object. When set to true, Nothing will be synced, `ethernal.push` won't do anything either.
+
 ## [v0.7.1] - 2022-04-12
 ### Changed
 - Start syncing transactions when the block has been synced. If block syncing fails, tx won't be synced.
