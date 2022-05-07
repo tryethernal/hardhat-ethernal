@@ -8,6 +8,12 @@ import { ContractInput } from './types';
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { MessageTraceStep } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
+declare module "hardhat/types/config" {
+  interface HardhatConfig {
+    disableEthernal?: boolean;
+  }
+}
+
 declare module "hardhat/types/runtime" {
   export interface HardhatRuntimeEnvironment {
     ethernalSync: boolean;

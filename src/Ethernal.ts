@@ -35,6 +35,8 @@ export class Ethernal {
     }
 
     public async push(targetContract: ContractInput) {
+        if (this.env.config.disableEthernal) { return; }
+
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
 
