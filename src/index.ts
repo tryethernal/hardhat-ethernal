@@ -27,9 +27,7 @@ extendEnvironment((hre) => {
   if (hre.config.disableEthernal) {
       console.log('[Ethernal] Ethernal is disabled.')
   }
-  else {
-      hre.ethernalSync = hre.ethernalSync !== undefined ? hre.ethernalSync : true;
-      hre.ethernalTrace = hre.ethernalTrace !== undefined ? hre.ethernalTrace : true;
-      hre.ethernal = lazyObject(() => new Ethernal(hre));
-  }
+  hre.ethernalSync = hre.ethernalSync !== undefined ? hre.ethernalSync : true;
+  hre.ethernalTrace = hre.ethernalTrace !== undefined ? hre.ethernalTrace : true;
+  hre.ethernal = lazyObject(() => new Ethernal(hre));
 });
