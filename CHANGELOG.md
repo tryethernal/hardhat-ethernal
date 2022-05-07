@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 Updated README
 
-## [v0.8.0] - 2022-04-12
+## [v0.8.1] - 2022-05-07
+### Fixed
+- Bug with global flag on `ethernal.push`
+
+## [v0.8.0] - 2022-05-07
 ### Added
 - `disableEthernal` flag on Hardhat config object. When set to true, Nothing will be synced, `ethernal.push` won't do anything either.
 
