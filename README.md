@@ -31,7 +31,7 @@ module.exports = {
 ## Synchronize blocks & transactions
 
 Once you've installed the plugin and authenticated, the plugin will automatically sync blocks and transactions going through your node.
-By default, it will synchronize to the last workspace you logged in in the web ui. See the next section to learn how to set the workspace.
+By default, it will synchronize to the latest workspace you've used in the web ui. See next section to learn how to set the workspace manually.
 
 ## Options
 
@@ -41,9 +41,9 @@ module.exports = {
     ethernal: {
         disableSync: false, // If set to true, plugin will not sync blocks & txs
         disableTrace: false, // If set to true, plugin won't trace transaction
-        workspace: undefined, // Set the workspace to use, will default to the default workspace (last one used in the web UI). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
+        workspace: undefined, // Set the workspace to use, will default to the default workspace (latest one used in the web UI). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
         uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
-        disabled: false, // If set to true, the plugin will be disabled, ethernal.push won't do anything
+        disabled: false, // If set to true, the plugin will be disabled, nohting will be synced, ethernal.push won't do anything either
         resetOnStart: undefined // Pass a workspace name to reset it automatically when restarting the node, note that if the workspace doesn't exist it won't error
     }
 };
@@ -69,6 +69,6 @@ await hre.ethernal.push({
 
 By default, the push function is not going to upload AST to Ethernal. If you want to use "Storage" tab on contracts pages, you'll need to activate it. To do so, set the ```hre.ethernalUploadAst = true``` flag in your Hardhat config file (this will upload the ast field, as well as the source field).
 
-## Reset a workspace
+## Reset a workspace programmatically
 
-You can manually reset a workspace by calling: `hre.ethernal.resetWorkspace(workspaceName)` (async function). All accounts/blocks/transactions/contracts will be deleted;
+You can reset a workspace programmatically by calling: `hre.ethernal.resetWorkspace(workspaceName)` (async function). All accounts/blocks/transactions/contracts will be deleted.
