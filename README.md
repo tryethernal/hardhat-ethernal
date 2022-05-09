@@ -18,7 +18,8 @@ In your ```hardhat-config.js```file, require the plugin:
 require('hardhat-ethernal');
 ````
 
-To authenticate, you can set `ETHERNAL_EMAIL` and `ETHERNAL_PASSWORD` in your env variables, they'll be picked up automatically. You can also set them in the config object:
+To authenticate, you can set `ETHERNAL_EMAIL` and `ETHERNAL_PASSWORD` in your env variables, they'll be picked up automatically.
+You can also set them in the config object:
 ```js
 module.exports = {
     ethernal: {
@@ -31,7 +32,7 @@ module.exports = {
 ## Synchronize blocks & transactions
 
 Once you've installed the plugin and authenticated, the plugin will automatically sync blocks and transactions going through your node.
-By default, it will synchronize to the latest workspace you've used in the web ui. See next section to learn how to set the workspace manually.
+By default, it will synchronize to the latest workspace you've used in the dashboard. See next section to learn how to set the workspace manually.
 
 ## Options
 
@@ -41,7 +42,7 @@ module.exports = {
     ethernal: {
         disableSync: false, // If set to true, plugin will not sync blocks & txs
         disableTrace: false, // If set to true, plugin won't trace transaction
-        workspace: undefined, // Set the workspace to use, will default to the default workspace (latest one used in the web UI). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
+        workspace: undefined, // Set the workspace to use, will default to the default workspace (latest one used in the dashboard). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
         uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
         disabled: false, // If set to true, the plugin will be disabled, nohting will be synced, ethernal.push won't do anything either
         resetOnStart: undefined // Pass a workspace name to reset it automatically when restarting the node, note that if the workspace doesn't exist it won't error
