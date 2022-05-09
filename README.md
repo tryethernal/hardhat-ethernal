@@ -12,9 +12,6 @@ If you are looking for more detailed doc about Ethernal: https://doc.tryethernal
 
 Add ```hardhat-ethernal``` to your ```package.json```, and run ```npm install``` or ```yarn```
 
-## Login
-
-To authenticate with your Ethernal account, you can either use the ```ethernal``` npm package and run ```ethernal login```.
 
 Otherwise, you can pass the env variables ```ETHERNAL_EMAIL``` and ```ETHERNAL_PASSWORD``` to the Hardhat command. This is especially useful if you are running Ethernal on Ubuntu or in a Docker container as you might run into issues with the keychain on there.
 
@@ -25,25 +22,30 @@ In your ```hardhat-config.js```file, require the plugin:
 require('hardhat-ethernal');
 ````
 
-That's it! Blocks and transactions will now be synchronized.
+To authenticate, you can set `ETHERNAL_EMAIL` and `ETHERNAL_PASSWORD` in your env variables, they'll be picked up automatically. You can also set them in the config object:
+```js
+module.exports = {
+    ethernal: {
+        email: process.env.ETHERNAL_EMAIL,
+        password: process.env.ETHERNAL_PASSWORD,
+    }
+};
+```
 
 ### Options
 
-It's possible to disable the synchronization by setting ```ethernalSync``` to ```false``` on the ```hre``` object.
-
-You can also specify which workspace you want to synchronize blocks & transactions to (default to the last one used in the dashboard).
-
-By default, transactions will be traced using ```experimentalAddHardhatNetworkMessageTraceHook```, showing CALLx and CREATEx operations in the dashboard.
-You can disable this feature with the ```ethernalTrace``` flag.
-
-You can automatically reset your workspace by setting the `ethernalResetOnStart` property to the name of the workspace. Everytime the node starts, all accounts/blocks/transactions/contracts will be deleted.
+All options need to be under the optional `ethernal` key in the Hardhat config object, default values are shown below:
 ```js
-extendEnvironment((hre) => {
-    hre.ethernalSync = true;
-    hre.ethernalWorkspace = 'Workspace';
-    hre.ethernalTrace = false;
-    hre.ethernalResetOnStart = 'Hardhat';
-});
+module.exports = {
+    ethernal: {
+        disableSync: false, // If set to true, plugin will not sync blocks & txs
+        disableTrace: false, // If set to true, plugin won't trace transaction
+        workspace: undefined, // Set the workspace to use, will default to the default workspace (last one used in the web UI)
+        uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
+        disabled: false, // If set to true, the plugin will be disabled, ethernal.push won't do anything
+        resetOnStart: undefined // Pass a workspace name to reset it automatically when restarting the node, note that if the workspace doesn't exist it won't error
+    }
+};
 ```
 
 ## Synchronize artifacts
@@ -69,7 +71,3 @@ By default, the push function is not going to upload AST to Ethernal. If you wan
 ## Reset a workspace
 
 You can manually reset a workspace by calling: `hre.ethernal.resetWorkspace(workspaceName)` (async function). All accounts/blocks/transactions/contracts will be deleted;
-
-## Disable Ethernal globally
-
-To prevent Ethernal from syncing, and to disable `ethernal.push`, the `disableEthernal` flag can be set to `true` one the Hardhat config object. This can be useful in test environment, for example.
