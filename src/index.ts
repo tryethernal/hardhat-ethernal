@@ -1,5 +1,6 @@
 import '@nomiclabs/hardhat-ethers';
-import { extendEnvironment, subtask, experimentalAddHardhatNetworkMessageTraceHook } from "hardhat/config";
+import { extendEnvironment, subtask, experimentalAddHardhatNetworkMessageTraceHook, extendConfig } from "hardhat/config";
+import { HardhatConfig, HardhatUserConfig } from "hardhat/types";
 import { lazyObject } from "hardhat/plugins";
 import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
 
@@ -8,8 +9,9 @@ import { Ethernal } from "./Ethernal";
 import "./type-extensions";
 
 subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
-    if (!hre.config.disableEthernal) {
-        if (hre.ethernalSync) {
+    const ethernalConfig = hre.config.ethernal;
+    if (ethernalConfig && !ethernalConfig.disabled) {
+        if (!ethernalConfig.disableSync) {
             hre.ethernal.startListening();
         }
         else
@@ -19,15 +21,28 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
 });
 
 experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceFromACall) => {
-    if (!hre.config.disableEthernal)
+    if (!hre.config.ethernal.disabled)
         hre.ethernal.traceHandler(trace, isMessageTraceFromACall);
 });
 
+extendConfig(
+    (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
+        config.ethernal = {
+            disableSync: !!userConfig.ethernal?.disableSync,
+            disableTrace: !!userConfig.ethernal?.disableTrace,
+            workspace: userConfig.ethernal?.workspace,
+            uploadAst: !!userConfig.ethernal?.uploadAst,
+            disabled: !!userConfig.ethernal?.disabled,
+            resetOnStart: userConfig.ethernal?.resetOnStart
+        };
+
+        return config;
+    }
+);
+
 extendEnvironment((hre) => {
-  if (hre.config.disableEthernal) {
+  if (hre.config.ethernal.disabled) {
       console.log('[Ethernal] Ethernal is disabled.')
   }
-  hre.ethernalSync = hre.ethernalSync !== undefined ? hre.ethernalSync : true;
-  hre.ethernalTrace = hre.ethernalTrace !== undefined ? hre.ethernalTrace : true;
   hre.ethernal = lazyObject(() => new Ethernal(hre));
 });

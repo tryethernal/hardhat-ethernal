@@ -1,5 +1,5 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ContractInput, EthernalContract } from './types';
+import { ContractInput, EthernalContract, EthernalConfig } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
@@ -26,8 +26,8 @@ export class Ethernal {
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
 
-        if (this.env.ethernalResetOnStart)
-            await this.resetWorkspace(this.env.ethernalResetOnStart);
+        if (this.env.config.ethernal.resetOnStart)
+            await this.resetWorkspace(this.env.config.ethernal.resetOnStart);
 
         this.env.ethers.provider.on('block', (blockNumber: number, error: any) => this.onData(blockNumber, error));
         this.env.ethers.provider.on('error', (error: any) => this.onError(error));
@@ -35,7 +35,7 @@ export class Ethernal {
     }
 
     public async push(targetContract: ContractInput) {
-        if (this.env.config.disableEthernal) { return; }
+        if (this.env.config.ethernal.disabled) { return; }
 
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
@@ -51,7 +51,7 @@ export class Ethernal {
             return;
         }
 
-        if (this.env.ethernalUploadAst) {
+        if (this.env.config.ethernal.uploadAst) {
             logger('Uploading contract AST, this might take a while depending on the size of your contract.');
             var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
                 workspace: this.db.workspace.name,
@@ -73,7 +73,7 @@ export class Ethernal {
             return logger(contractSyncRes);
         }
 
-        if (this.env.ethernalUploadAst) {
+        if (this.env.config.ethernal.uploadAst) {
             logger('Uploading dependencies ASTs, this might take a while depending on the size of your contracts.');
             try {
                 const dependenciesPromises = [];
@@ -97,7 +97,8 @@ export class Ethernal {
     }
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
-        if (!this.env.ethernalTrace) return;
+        if (this.env.config.ethernal.disabled) { return; }
+        if (this.env.config.ethernal.disableTrace) return;
 
         await this.setLocalEnvironment();
         const envSet = await this.setLocalEnvironment();
@@ -145,6 +146,7 @@ export class Ethernal {
     }
 
     public async resetWorkspace(workspace: string) {
+        if (this.env.config.ethernal.disabled) { return; }
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
 
@@ -248,11 +250,11 @@ export class Ethernal {
     private async setWorkspace() {
         try {
             let workspace: any = {};
-            if (this.env.ethernalWorkspace) {
-                workspace = await this.db.getWorkspace(this.env.ethernalWorkspace);
+            if (this.env.config.ethernal.workspace) {
+                workspace = await this.db.getWorkspace(this.env.config.ethernal.workspace);
                 if (!workspace) {
                     workspace = await this.getDefaultWorkspace();
-                    logger(`Could not find workspace "${this.env.ethernalWorkspace}", defaulting to ${workspace.name}`);
+                    logger(`Could not find workspace "${this.env.config.ethernal.workspace}", defaulting to ${workspace.name}`);
                 }
                 else {
                     logger(`Using workspace "${workspace.name}"`);

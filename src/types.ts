@@ -1,5 +1,14 @@
 import { BlockWithTransactions } from '@ethersproject/abstract-provider';
 
+export interface EthernalConfig {
+    disableSync: boolean;
+    disableTrace: boolean;
+    workspace?: string;
+    uploadAst: boolean;
+    disabled: boolean;
+    resetOnStart?: string;
+}
+
 export interface ContractInput {
     name: string;
     address: string;

@@ -4,28 +4,26 @@
 import "hardhat/types/config";
 import "hardhat/types/runtime";
 
-import { ContractInput } from './types';
+import { ContractInput, EthernalConfig } from './types';
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { MessageTraceStep } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
-declare module "hardhat/types/config" {
-  interface HardhatConfig {
-    disableEthernal?: boolean;
-  }
-}
-
 declare module "hardhat/types/runtime" {
   export interface HardhatRuntimeEnvironment {
-    ethernalSync: boolean;
-    ethernalTrace: boolean;
-    ethernalWorkspace: string;
-    ethernalResetOnStart: string;
-    ethernalUploadAst: boolean;
     ethernal: {
         startListening:() => Promise<void>;
         traceHandler:(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
         resetWorkspace: (workspace: string) => Promise<void>;
     }
+  }
+}
+
+declare module "hardhat/types/config" {
+  export interface HardhatUserConfig {
+    ethernal?: EthernalConfig;
+  }
+  export interface HardhatConfig {
+    ethernal: EthernalConfig;
   }
 }
