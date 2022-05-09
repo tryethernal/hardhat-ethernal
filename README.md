@@ -15,7 +15,6 @@ Add ```hardhat-ethernal``` to your ```package.json```, and run ```npm install```
 
 Otherwise, you can pass the env variables ```ETHERNAL_EMAIL``` and ```ETHERNAL_PASSWORD``` to the Hardhat command. This is especially useful if you are running Ethernal on Ubuntu or in a Docker container as you might run into issues with the keychain on there.
 
-## Synchronize blocks & transactions
 
 In your ```hardhat-config.js```file, require the plugin:
 ```js
@@ -32,7 +31,12 @@ module.exports = {
 };
 ```
 
-### Options
+## Synchronize blocks & transactions
+
+Once you've installed the plugin and authenticated, the plugin will automatically sync blocks and transactions going through your node.
+By default, it will synchronize to the last workspace you logged in in the web ui. See the next section to learn how to set the workspace.
+
+## Options
 
 All options need to be under the optional `ethernal` key in the Hardhat config object, default values are shown below:
 ```js
@@ -40,7 +44,7 @@ module.exports = {
     ethernal: {
         disableSync: false, // If set to true, plugin will not sync blocks & txs
         disableTrace: false, // If set to true, plugin won't trace transaction
-        workspace: undefined, // Set the workspace to use, will default to the default workspace (last one used in the web UI)
+        workspace: undefined, // Set the workspace to use, will default to the default workspace (last one used in the web UI). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
         uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
         disabled: false, // If set to true, the plugin will be disabled, ethernal.push won't do anything
         resetOnStart: undefined // Pass a workspace name to reset it automatically when restarting the node, note that if the workspace doesn't exist it won't error
