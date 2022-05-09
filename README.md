@@ -13,9 +13,6 @@ If you are looking for more detailed doc about Ethernal: https://doc.tryethernal
 Add ```hardhat-ethernal``` to your ```package.json```, and run ```npm install``` or ```yarn```
 
 
-Otherwise, you can pass the env variables ```ETHERNAL_EMAIL``` and ```ETHERNAL_PASSWORD``` to the Hardhat command. This is especially useful if you are running Ethernal on Ubuntu or in a Docker container as you might run into issues with the keychain on there.
-
-
 In your ```hardhat-config.js```file, require the plugin:
 ```js
 require('hardhat-ethernal');
