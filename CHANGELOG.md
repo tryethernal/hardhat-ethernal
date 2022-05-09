@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 Updated README
 
+## [v1.0.0] - 2022-05-09
+### Changed
+- All options are now going through an `ethernal` object on Hardhat config. See README for details
+
+### Removed
+- Local keychain is no longer used, only way to login are using env variables or config object.
+- Keytar & configstore have been removed
+
 ## [v0.8.1] - 2022-05-07
 ### Fixed
 - Bug with global flag on `ethernal.push`
