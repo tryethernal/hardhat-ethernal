@@ -3,7 +3,6 @@ import { ContractInput, EthernalContract, EthernalConfig } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
-const credentials = require('./credentials');
 const firebase = require('./firebase');
 
 var logger = (message: any) => {
@@ -272,13 +271,14 @@ export class Ethernal {
 
     private async login() {
         try {
-            var email = await credentials.getEmail();
+            let email, password;
+            email = this.env.config.ethernal.email;
 
             if (!email) {
                 return logger('You are not logged in, please run "ethernal login".')
             }
             else {
-                var password = await credentials.getPassword(email);
+                password = this.env.config.ethernal.password;
                 if (!password) {
                     return logger('You are not logged in, please run "ethernal login".')
                 }    
@@ -288,9 +288,11 @@ export class Ethernal {
             logger(`Logged in with ${user.email}`);
             return user;
         }
-        catch(_error) {
-            logger(_error);
-            logger('Error while retrieving your credentials, please run "ethernal login"');
+        catch(_error: any) {
+            if (_error.message)
+                logger(_error.message);
+            else
+                logger('Error while retrieving your credentials, please run "ethernal login"');
         }
     }
 

@@ -30,10 +30,12 @@ extendConfig(
         config.ethernal = {
             disableSync: !!userConfig.ethernal?.disableSync,
             disableTrace: !!userConfig.ethernal?.disableTrace,
-            workspace: userConfig.ethernal?.workspace,
+            workspace: userConfig.ethernal?.workspace || process.env.ETHERNAL_WORKSPACE,
             uploadAst: !!userConfig.ethernal?.uploadAst,
             disabled: !!userConfig.ethernal?.disabled,
-            resetOnStart: userConfig.ethernal?.resetOnStart
+            resetOnStart: userConfig.ethernal?.resetOnStart,
+            email: userConfig.ethernal?.email || process.env.ETHERNAL_EMAIL,
+            password: userConfig.ethernal?.password || process.env.ETHERNAL_PASSWORD
         };
 
         return config;

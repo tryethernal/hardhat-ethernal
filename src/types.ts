@@ -7,6 +7,8 @@ export interface EthernalConfig {
     uploadAst: boolean;
     disabled: boolean;
     resetOnStart?: string;
+    email?: string;
+    password?: string;
 }
 
 export interface ContractInput {
