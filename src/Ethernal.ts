@@ -14,11 +14,13 @@ export class Ethernal {
     private targetContract!: ContractInput;
     private db: any;
     private trace: any[];
+    private syncNextBlock: Boolean;
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
         this.db = new firebase.DB();
         this.trace = [];
+        this.syncNextBlock = true;
     }
 
     public async startListening() {
@@ -28,7 +30,18 @@ export class Ethernal {
         if (this.env.config.ethernal.resetOnStart)
             await this.resetWorkspace(this.env.config.ethernal.resetOnStart);
 
-        this.env.ethers.provider.on('block', (blockNumber: number, error: any) => this.onData(blockNumber, error));
+        this.syncNextBlock = false;
+
+        this.env.ethers.provider.on('block', (blockNumber: number, error: any) => {
+            if (blockNumber == 0 || this.syncNextBlock){
+                this.syncNextBlock = true;
+                this.onData(blockNumber, error)
+            }
+            else {
+                logger(`Skipping block ${blockNumber}`);
+                this.syncNextBlock = true;
+            }
+        });
         this.env.ethers.provider.on('error', (error: any) => this.onError(error));
         this.env.ethers.provider.on('pending', () => this.onPending());
     }
