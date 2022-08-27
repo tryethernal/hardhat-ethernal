@@ -35,7 +35,8 @@ extendConfig(
             disabled: !!userConfig.ethernal?.disabled,
             resetOnStart: userConfig.ethernal?.resetOnStart,
             email: userConfig.ethernal?.email || process.env.ETHERNAL_EMAIL,
-            password: userConfig.ethernal?.password || process.env.ETHERNAL_PASSWORD
+            password: userConfig.ethernal?.password || process.env.ETHERNAL_PASSWORD,
+            serverSync: !!userConfig.ethernal?.serverSync
         };
 
         return config;

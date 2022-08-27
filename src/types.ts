@@ -9,6 +9,7 @@ export interface EthernalConfig {
     resetOnStart?: string;
     email?: string;
     password?: string;
+    serverSync?: boolean;
 }
 
 export interface ContractInput {

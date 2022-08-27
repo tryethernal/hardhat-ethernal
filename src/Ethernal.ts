@@ -175,8 +175,14 @@ export class Ethernal {
         if (error && error.reason) {
             return logger(`Error while receiving data: ${error.reason}`);
         }
-
-        this.env.ethers.provider.getBlockWithTransactions(blockNumber).then((block: BlockWithTransactions) => this.syncBlock(block));
+        if (this.env.config.ethernal.serverSync) {
+            logger(`Syncing block #${blockNumber}...`);
+            firebase.functions
+                .httpsCallable('serverSideBlockSync')({ blockNumber: blockNumber, workspace: this.db.workspace.name })
+                .catch(console.log);
+        }
+        else
+            this.env.ethers.provider.getBlockWithTransactions(blockNumber).then((block: BlockWithTransactions) => this.syncBlock(block));
     }
 
     private onError(error: any) {

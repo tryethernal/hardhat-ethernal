@@ -46,6 +46,7 @@ module.exports = {
         uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
         disabled: false, // If set to true, the plugin will be disabled, nohting will be synced, ethernal.push won't do anything either
         resetOnStart: undefined // Pass a workspace name to reset it automatically when restarting the node, note that if the workspace doesn't exist it won't error
+        serverSync: false // If set to true, blocks & txs will be synced by the server. For this to work, your chain needs to be accessible from the internet. Also, trace won't be synced for now when this is enabled.
     }
 };
 ```
