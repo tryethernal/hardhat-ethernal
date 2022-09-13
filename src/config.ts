@@ -9,7 +9,7 @@ const PROD_CONFIG = {
 }
 
 const DEV_CONFIG = {
-    apiKey: 123,
+    apiKey: '123',
     projectId: 'ethernal-95a14',
     databaseURL: process.env.RTDB_HOST,
 };

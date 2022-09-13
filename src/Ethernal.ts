@@ -3,7 +3,8 @@ import { ContractInput, EthernalContract, EthernalConfig } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
-const firebase = require('./firebase');
+import { Api } from './api';
+const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://app-pql6sv7epq-uc.a.run.app';
 
 var logger = (message: any) => {
     console.log(`[Ethernal] `, message);
@@ -15,10 +16,11 @@ export class Ethernal {
     private db: any;
     private trace: any[];
     private syncNextBlock: Boolean;
+    private api: any;
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
-        this.db = new firebase.DB();
+        this.api = new Api(ETHERNAL_API_ROOT);
         this.trace = [];
         this.syncNextBlock = true;
     }
@@ -65,38 +67,27 @@ export class Ethernal {
 
         if (this.env.config.ethernal.uploadAst) {
             logger('Uploading contract AST, this might take a while depending on the size of your contract.');
-            var storeArtifactRes = await firebase.functions.httpsCallable('syncContractArtifact')({
-                workspace: this.db.workspace.name,
-                address: contract.address,
-                artifact: contract.artifact
-            });
-            if (!storeArtifactRes.data) {
-                return logger(storeArtifactRes);
+            try {
+                await this.api.syncContractArtifact(contract.address, contract.artifact)
+            } catch(error) {
+                return logger(error);
             }
         }
 
-        var contractSyncRes = await firebase.functions.httpsCallable('syncContractData')({
-            workspace: this.db.workspace.name,
-            name: contract.name,
-            address: contract.address,
-            abi: contract.abi
-        });
-        if (!contractSyncRes.data) {
-            return logger(contractSyncRes);
+        try {
+            await this.api.syncContractData(contract.name, contract.address, contract.abi);
+        } catch(error) {
+            return logger(error);
         }
 
         if (this.env.config.ethernal.uploadAst) {
             logger('Uploading dependencies ASTs, this might take a while depending on the size of your contracts.');
             try {
                 const dependenciesPromises = [];
+
                 for (const dep in contract.dependencies)
-                    dependenciesPromises.push(
-                            firebase.functions.httpsCallable('syncContractDependencies')({
-                                workspace: this.db.workspace.name,
-                                address: contract.address,
-                                dependencies: { [dep]: contract.dependencies[dep] }
-                            })
-                    );
+                    dependenciesPromises.push(this.api.syncContractDependencies(contract.address, { [dep]: contract.dependencies[dep] }));
+
                 await Promise.all(dependenciesPromises);
             } catch(error: any) {
                 logger(`Couldn't sync dependencies: ${error.message}`);
@@ -163,8 +154,9 @@ export class Ethernal {
         if (!envSet) { return; }
 
         logger(`Resetting workspace "${workspace}"...`);
+
         try {
-            await firebase.functions.httpsCallable('resetWorkspace')({ workspace: workspace });
+            await this.api.resetWorkspace(workspace);
             logger(`Workspace "${workspace}" has been reset!`);
         } catch(error: any) {
             logger(`Error while resetting workspace "${workspace}": ${error.message}`);
@@ -177,8 +169,7 @@ export class Ethernal {
         }
         if (this.env.config.ethernal.serverSync) {
             logger(`Syncing block #${blockNumber}...`);
-            firebase.functions
-                .httpsCallable('serverSideBlockSync')({ blockNumber: blockNumber, workspace: this.db.workspace.name })
+            this.api.syncBlock({ number: blockNumber }, true)
                 .catch(console.log);
         }
         else
@@ -195,12 +186,21 @@ export class Ethernal {
     }
 
     private async setLocalEnvironment() {
-        if (this.db.userId && this.db.workspace) { return true; }
-        const user = await this.login();
-        if (!user) { return false; }
-        await this.setWorkspace();
-        if (!this.db.workspace)
-            return false;
+        if (this.api.isLoggedIn && this.api.hasWorkspace)
+            return true;
+
+        if (!this.api.isLoggedIn) {
+            const isLoggedIn = await this.login();
+            if (!isLoggedIn)
+                return false;
+        }
+
+        if (!this.api.hasWorkspace) {
+            const isWorkspaceSet = await this.setWorkspace();
+            if (!isWorkspaceSet)
+                return false;
+
+        }
         return true;
     }
 
@@ -210,9 +210,9 @@ export class Ethernal {
 
     private syncBlock(block: BlockWithTransactions) {
         if (block) {
-            firebase.functions.httpsCallable('syncBlock')({ block: block, workspace: this.db.workspace.name })
+            this.api.syncBlock(block, false)
                 .then(({ data }: { data: any }) => {
-                    logger(`Synced block #${data.blockNumber}`);
+                    logger(`Synced block #${block.number}`);
                     for (let i = 0; i < block.transactions.length; i++) {
                         const transaction = block.transactions[i];
                         this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => this.syncTransaction(block, transaction, receipt));
@@ -235,83 +235,56 @@ export class Ethernal {
     }
     
     private syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
-        return firebase.functions.httpsCallable('syncTransaction')({
-            block: block,
-            transaction: transaction,
-            transactionReceipt: transactionReceipt,
-            workspace: this.db.workspace.name
-        })
-        .then(({ data }: { data: any }) => {
-            if (this.trace && this.trace.length) {
-                firebase.functions.httpsCallable('syncTrace')({
-                    workspace: this.db.workspace.name,
-                    txHash: transaction.hash,
-                    steps: this.trace
-                })
-                .catch(logger)
-                .finally(() => this.trace = []);
-            }
-        });
-    }
-
-    private async getDefaultWorkspace() {
-        var currentUser = await this.db.currentUser().get();
-        var data = await currentUser.data();
-        if (!data.currentWorkspace) {
-            throw new Error('Please create a workspace first on https://app.tryethernal.com.');
-        }
-        
-        var defaultWorkspace = await data.currentWorkspace.get();
-        return { ...defaultWorkspace.data(), name: defaultWorkspace.id };
+        return this.api.syncTransaction(block, transaction, transactionReceipt)
+            .then(() => {
+                if (this.trace && this.trace.length) {
+                    this.api.syncTrace(transaction.hash, this.trace)
+                        .catch(logger)
+                        .finally(() => this.trace = []);
+                }
+            });
     }
 
     private async setWorkspace() {
         try {
-            let workspace: any = {};
-            if (this.env.config.ethernal.workspace) {
-                workspace = await this.db.getWorkspace(this.env.config.ethernal.workspace);
-                if (!workspace) {
-                    workspace = await this.getDefaultWorkspace();
-                    logger(`Could not find workspace "${this.env.config.ethernal.workspace}", defaulting to ${workspace.name}`);
-                }
-                else {
-                    logger(`Using workspace "${workspace.name}"`);
-                }
-            }
-            else {
-                workspace = await this.getDefaultWorkspace();
-                logger(`Using default workspace "${workspace.name}"`);
-            }
-            this.db.workspace = workspace;
+            const workspace = await this.api.setWorkspace(this.env.config.ethernal.workspace);
+            logger(`Using workspace "${workspace.name}"`);
+
+            return true;
         } catch(error: any) {
             logger(error.message || 'Error while setting the workspace.');
+            return false;
         }
     }
 
     private async login() {
         try {
             let email, password;
+
             email = this.env.config.ethernal.email;
 
             if (!email) {
-                return logger('You are not logged in, please run "ethernal login".')
+                return logger(`Missing email to authenticate. Make sure you've either set ETHERNAL_EMAIL in your environment or they key 'email' in your Ethernal config object.`);
             }
             else {
                 password = this.env.config.ethernal.password;
                 if (!password) {
-                    return logger('You are not logged in, please run "ethernal login".')
+                    return logger(`Missing password to authenticate. Make sure you've either set ETHERNAL_PASSWORD in your environment or they key 'password' in your Ethernal config object.`);
                 }    
             }
 
-            const user = (await firebase.auth().signInWithEmailAndPassword(email, password)).user;
-            logger(`Logged in with ${user.email}`);
-            return user;
+            await this.api.login(email, password);
+            logger(`Logged in with ${email}`);
+
+            return true;
         }
         catch(_error: any) {
             if (_error.message)
                 logger(_error.message);
             else
                 logger('Error while retrieving your credentials, please run "ethernal login"');
+
+            return false;
         }
     }
 

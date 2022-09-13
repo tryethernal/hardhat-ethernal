@@ -29,13 +29,37 @@ export type EthernalContract = {
 }
 
 export type Workspace = {
+    id: number;
     name: string;
+    chain: string;
+    networkId: string;
+    public: boolean;
     rpcServer: string;
-    settings?: {
-        defaultAccount?: string;
-        gas?: string;
-        gasPrice?: string;
-    }
+    defaultAccount?: string;
+    gasLimit?: string;
+    gasPrice?: string;
+    userId: number;
+    apiEnabled: boolean;
+    tracing?: string;
+    alchemyIntegrationEnabled: boolean;
+    isRemote?: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export type User = {
+    isPremium: boolean;
+    id: number;
+    firebaseUserId: string;
+    email: string;
+    apiKey: string;
+    currentWorkspaceId: number;
+    plan: string;
+    stripeCustomerId: string;
+    explorerSubscriptionId?: string;
+    createdAt: string;
+    updatedAt: string;
+    workspaces: Workspace[]
 }
 
 export type SyncedBlock = {
@@ -49,4 +73,13 @@ export type SyncedBlock = {
     gasUsed: string;
     miner: string;
     extraData: string;
+}
+
+export type TraceStep = {
+    op: string;
+    contractHashedBytecode: string;
+    address: string;
+    input: string;
+    depth: number;
+    returnData?: string;
 }
