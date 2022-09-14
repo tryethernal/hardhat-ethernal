@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.0.1] - 2022-09-14
+### Fixed
+- Improved stability. The plugin won't crash (and won't make the node crash) when an API call fails.
+
 ## [v2.0.0] - 2022-09-13
 ### Removed
 - Started to remove Firebase calls in favor of the new backend
