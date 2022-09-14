@@ -137,7 +137,7 @@ export class Api {
             throw new Error('[syncTrace] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncTransaction] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncTrace] The workspace needs to be set to synchronize blocks.');
     
         return axios.post(`${this.apiRoot}/api/transactions/${transactionHash}/trace`, {
             firebaseAuthToken,
