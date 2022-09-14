@@ -107,7 +107,6 @@ export class Ethernal {
         const envSet = await this.setLocalEnvironment();
         if (!envSet) return;
 
-        logger('Tracing transaction...');
         let stepper = async (step: MessageTraceStep) => {
             if (isEvmStep(step) || isPrecompileTrace(step))
                 return;
@@ -163,17 +162,26 @@ export class Ethernal {
         }
     }
 
-    private onData(blockNumber: number, error: any) {
+    private async onData(blockNumber: number, error: any) {
         if (error && error.reason) {
             return logger(`Error while receiving data: ${error.reason}`);
         }
         if (this.env.config.ethernal.serverSync) {
-            logger(`Syncing block #${blockNumber}...`);
-            this.api.syncBlock({ number: blockNumber }, true)
-                .catch(console.log);
+            try {
+                logger(`Syncing block #${blockNumber}...`);
+                await this.api.syncBlock({ number: blockNumber }, true);
+            } catch(error) {
+                logger(`Couldn't sync block #${blockNumber}`);
+            }
         }
-        else
-            this.env.ethers.provider.getBlockWithTransactions(blockNumber).then((block: BlockWithTransactions) => this.syncBlock(block));
+        else {
+            try {
+                const block = await this.env.ethers.provider.getBlockWithTransactions(blockNumber);
+                await this.syncBlock(block);
+            } catch(error) {
+                logger(`Couldn't sync block #${blockNumber}`);
+            }
+        }
     }
 
     private onError(error: any) {
@@ -208,16 +216,26 @@ export class Ethernal {
         //TODO: to implement
     }
 
-    private syncBlock(block: BlockWithTransactions) {
+    private async syncBlock(block: BlockWithTransactions) {
         if (block) {
-            this.api.syncBlock(block, false)
-                .then(({ data }: { data: any }) => {
-                    logger(`Synced block #${block.number}`);
-                    for (let i = 0; i < block.transactions.length; i++) {
-                        const transaction = block.transactions[i];
-                        this.env.ethers.provider.getTransactionReceipt(transaction.hash).then((receipt: TransactionReceipt) => this.syncTransaction(block, transaction, receipt));
-                    }
-                });
+            try {
+                await this.api.syncBlock(block, false);
+                logger(`Synced block #${block.number}`);
+            }  catch(error) {
+                logger(`Couldn't sync block #${block.number}`);
+            }
+            for (let i = 0; i < block.transactions.length; i++) {
+                const transaction = block.transactions[i];
+                try {
+                    const receipt = await this.env.ethers.provider.getTransactionReceipt(transaction.hash);
+                    if (!receipt)
+                        logger(`Couldn't get receipt for transaction ${transaction.hash}`);
+                    else
+                        await this.syncTransaction(block, transaction, receipt);
+                } catch(error) {
+                    logger(`Coulnd't sync transaction ${transaction.hash}`);
+                }
+            }
         }
     }
 
@@ -234,15 +252,21 @@ export class Ethernal {
         return res;
     }
     
-    private syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
-        return this.api.syncTransaction(block, transaction, transactionReceipt)
-            .then(() => {
-                if (this.trace && this.trace.length) {
-                    this.api.syncTrace(transaction.hash, this.trace)
-                        .catch(logger)
-                        .finally(() => this.trace = []);
-                }
-            });
+    private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
+        try {
+            await this.api.syncTransaction(block, transaction, transactionReceipt)
+        } catch (error) {
+            logger(`Coulnd't sync transaction ${transaction.hash}`);
+        }
+        if (this.trace && this.trace.length) {
+            try {
+                await this.api.syncTrace(transaction.hash, this.trace);
+                logger(`Synced trace for transaction ${transaction.hash}`);
+            } catch(error) {
+                logger(`Error while syncing trace for transaction ${transaction.hash}`);
+            }
+            
+        }
     }
 
     private async setWorkspace() {
@@ -264,12 +288,12 @@ export class Ethernal {
             email = this.env.config.ethernal.email;
 
             if (!email) {
-                return logger(`Missing email to authenticate. Make sure you've either set ETHERNAL_EMAIL in your environment or they key 'email' in your Ethernal config object.`);
+                return logger(`Missing email to authenticate. Make sure you've either set ETHERNAL_EMAIL in your environment or they key 'email' in your Ethernal config object & restart the node.`);
             }
             else {
                 password = this.env.config.ethernal.password;
                 if (!password) {
-                    return logger(`Missing password to authenticate. Make sure you've either set ETHERNAL_PASSWORD in your environment or they key 'password' in your Ethernal config object.`);
+                    return logger(`Missing password to authenticate. Make sure you've either set ETHERNAL_PASSWORD in your environment or they key 'password' in your Ethernal config object & restart the node.`);
                 }    
             }
 
@@ -279,11 +303,7 @@ export class Ethernal {
             return true;
         }
         catch(_error: any) {
-            if (_error.message)
-                logger(_error.message);
-            else
-                logger('Error while retrieving your credentials, please run "ethernal login"');
-
+            logger('Error during login. Check that credentials are correct & restart the node.');
             return false;
         }
     }

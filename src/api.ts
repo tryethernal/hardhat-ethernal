@@ -89,7 +89,7 @@ export class Api {
         if (!firebaseAuthToken)
             throw new Error('[resetWorkspace] You need to be authenticated to reset a workspace');
         
-        return axios.post(`${this.apiRoot}/api/workspaces/reset`, { firebaseAuthToken, data: { workspace: workspaceName }});
+        return await axios.post(`${this.apiRoot}/api/workspaces/reset`, { firebaseAuthToken, data: { workspace: workspaceName }});
     }
 
     async syncBlock(block: BlockWithTransactions, serverSync: boolean = false) {
@@ -103,7 +103,7 @@ export class Api {
         if (!this.currentWorkspace)
             throw new Error('[syncBlock] The workspace needs to be set to synchronize blocks.')
 
-        return axios.post(`${this.apiRoot}/api/blocks?serverSync=${serverSync}`, { firebaseAuthToken, data: { block: block, workspace: this.currentWorkspace.name }});
+        return await axios.post(`${this.apiRoot}/api/blocks?serverSync=${serverSync}`, { firebaseAuthToken, data: { block: block, workspace: this.currentWorkspace.name }});
     }
 
     async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
@@ -117,7 +117,7 @@ export class Api {
         if (!this.currentWorkspace)
             throw new Error('[syncTransaction] The workspace needs to be set to synchronize blocks.');
         
-        return axios.post(`${this.apiRoot}/api/transactions`, {
+        return await axios.post(`${this.apiRoot}/api/transactions`, {
             firebaseAuthToken,
             data: {
                 block: block,
@@ -137,9 +137,9 @@ export class Api {
             throw new Error('[syncTrace] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncTransaction] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncTrace] The workspace needs to be set to synchronize blocks.');
     
-        return axios.post(`${this.apiRoot}/api/transactions/${transactionHash}/trace`, {
+        return await axios.post(`${this.apiRoot}/api/transactions/${transactionHash}/trace`, {
             firebaseAuthToken,
             data: {
                 txHash: transactionHash,
@@ -160,7 +160,7 @@ export class Api {
         if (!this.currentWorkspace)
             throw new Error('[syncContractData] The workspace needs to be set to synchronize blocks.');
 
-        return axios.post(`${this.apiRoot}/api/contracts/${address}`, {
+        return await axios.post(`${this.apiRoot}/api/contracts/${address}`, {
             firebaseAuthToken,
             data: {
                 name: name,
