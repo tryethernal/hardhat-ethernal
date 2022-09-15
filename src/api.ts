@@ -12,14 +12,16 @@ const functions = getFunctions(app);
 
 export class Api {
     private apiRoot: string;
+    private webappRoot: string;
     private firebaseUserId: string | undefined;
     private currentUser: any;
     private currentWorkspace: Workspace | undefined;
     private auth: any;
 
-    constructor(apiRoot: string) {
+    constructor(apiRoot: string, webappRoot: string) {
         this.apiRoot = apiRoot;
         this.auth = auth;
+        this.webappRoot = webappRoot;
     }
 
     get isLoggedIn() {
@@ -27,6 +29,7 @@ export class Api {
     }
 
     get hasWorkspace() {
+        console.log(this.currentWorkspace)
         return !!this.currentWorkspace;
     }
 
@@ -51,8 +54,16 @@ export class Api {
                 this.firebaseUserId = this.auth.currentUser.uid;
                 const firebaseAuthToken = await this.getFirebaseAuthToken();
                 this.currentUser = (await axios.get(`${this.apiRoot}/api/users/me?firebaseAuthToken=${firebaseAuthToken}`)).data;
+
+                if (!this.currentUser.workspaces.length)
+                    throw new Error(`You need to create a new workspace on ${this.webappRoot} before using the plugin`);
+
                 if (this.currentUser.currentWorkspace)
                     this.currentWorkspace = this.currentUser.currentWorkspace;
+                else {
+                    await this.setWorkspace(this.currentUser.workspaces[0].name);
+                    await axios.post(`${this.apiRoot}/api/users/me/setCurrentWorkspace`, { firebaseAuthToken, data: { workspace: this.currentUser.workspaces[0].name }});
+                }
             }
             else
                 throw new Error(`Couldn't login with the specified email/password`);
@@ -75,7 +86,11 @@ export class Api {
                 }
             }
             if (!foundWorkspace)
-                throw new Error(`Couldn't find workspace ${workspace}. Make sure you're logged in with the correct account.`);
+                throw new Error(`Couldn't find workspace ${workspace}. Make sure you're logged in with the correct account`);
+
+            const firebaseAuthToken = await this.getFirebaseAuthToken();
+            if (!firebaseAuthToken)
+                throw new Error('[setWorkspace] You need to be authenticated to set a workspace');
         }
 
         return this.currentWorkspace;
@@ -115,7 +130,7 @@ export class Api {
             throw new Error('[syncTransaction] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncTransaction] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncTransaction] The workspace needs to be set to synchronize blocks');
         
         return await axios.post(`${this.apiRoot}/api/transactions`, {
             firebaseAuthToken,
@@ -137,7 +152,7 @@ export class Api {
             throw new Error('[syncTrace] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncTrace] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncTrace] The workspace needs to be set to synchronize blocks');
     
         return await axios.post(`${this.apiRoot}/api/transactions/${transactionHash}/trace`, {
             firebaseAuthToken,
@@ -158,7 +173,7 @@ export class Api {
             throw new Error('[syncContractData] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncContractData] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncContractData] The workspace needs to be set to synchronize blocks');
 
         return await axios.post(`${this.apiRoot}/api/contracts/${address}`, {
             firebaseAuthToken,
@@ -177,7 +192,7 @@ export class Api {
             throw new Error('[syncContractArtifact] Missing parameter');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncContractArtifact] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncContractArtifact] The workspace needs to be set to synchronize blocks');
 
         return httpsCallable(functions, 'syncContractArtifact')({
             workspace: this.currentWorkspace.name,
@@ -191,7 +206,7 @@ export class Api {
             throw new Error('[syncContractDependencies] Missing parameter');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncContractDependencies] The workspace needs to be set to synchronize blocks.');
+            throw new Error('[syncContractDependencies] The workspace needs to be set to synchronize blocks');
 
         return httpsCallable(functions, 'syncContractDependencies')({
             workspace: this.currentWorkspace.name,

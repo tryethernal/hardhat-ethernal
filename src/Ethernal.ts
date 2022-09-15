@@ -5,6 +5,7 @@ import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallM
 
 import { Api } from './api';
 const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://app-pql6sv7epq-uc.a.run.app';
+const ETHERNAL_WEBAPP_ROOT = process.env.ETHERNAL_WEBAPP_ROOT || 'https://app.tryethernal.com';
 
 var logger = (message: any) => {
     console.log(`[Ethernal] `, message);
@@ -20,7 +21,7 @@ export class Ethernal {
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
-        this.api = new Api(ETHERNAL_API_ROOT);
+        this.api = new Api(ETHERNAL_API_ROOT, ETHERNAL_WEBAPP_ROOT);
         this.trace = [];
         this.syncNextBlock = true;
     }
@@ -203,12 +204,10 @@ export class Ethernal {
                 return false;
         }
 
-        if (!this.api.hasWorkspace) {
-            const isWorkspaceSet = await this.setWorkspace();
-            if (!isWorkspaceSet)
-                return false;
+        const isWorkspaceSet = await this.setWorkspace();
+        if (!isWorkspaceSet)
+            return false;
 
-        }
         return true;
     }
 
@@ -302,8 +301,8 @@ export class Ethernal {
 
             return true;
         }
-        catch(_error: any) {
-            logger('Error during login. Check that credentials are correct & restart the node.');
+        catch(error: any) {
+            logger(error.message || 'Error during login. Check that credentials are correct & restart the node.');
             return false;
         }
     }
