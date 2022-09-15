@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.0.2] - 2022-09-15
+### Fixed
+- Workspace setup was buggy, especially if the user didn't create a workspace before launching the node.
+
 ## [v2.0.1] - 2022-09-14
 ### Fixed
 - Improved stability. The plugin won't crash (and won't make the node crash) when an API call fails.
