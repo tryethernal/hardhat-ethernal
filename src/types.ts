@@ -10,6 +10,7 @@ export interface EthernalConfig {
     email?: string;
     password?: string;
     serverSync?: boolean;
+    apiToken?: string;
 }
 
 export interface ContractInput {
