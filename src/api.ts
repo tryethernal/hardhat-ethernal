@@ -17,6 +17,7 @@ export class Api {
     private currentUser: any;
     private currentWorkspace: Workspace | undefined;
     private auth: any;
+    private apiToken: string | undefined;
 
     constructor(apiRoot: string, webappRoot: string) {
         this.apiRoot = apiRoot;
@@ -29,7 +30,6 @@ export class Api {
     }
 
     get hasWorkspace() {
-        console.log(this.currentWorkspace)
         return !!this.currentWorkspace;
     }
 
@@ -37,12 +37,50 @@ export class Api {
         return this.currentWorkspace?.name;
     }
 
+    get isUsingApiToken() {
+        return !!this.apiToken;
+    }
+
     async getFirebaseAuthToken() {
-        return this.auth?.currentUser ? await this.auth.currentUser.getIdToken() : null;
+        return !this.isUsingApiToken && this.auth?.currentUser ? await this.auth.currentUser.getIdToken() : null;
+    }
+
+    async setApiToken(apiToken: string) {
+        try {
+            this.apiToken = apiToken;
+            axios.defaults.headers.common['authorization'] = `Bearer ${this.apiToken}`;
+            return await this.fetchUser();
+        } catch(error) {
+            throw error;
+        }
+    }
+
+    private async fetchUser() {
+        const firebaseAuthToken = await this.getFirebaseAuthToken();
+
+        if (!firebaseAuthToken && !this.isUsingApiToken)
+            throw new Error('You need to authenticate first');
+
+        this.currentUser = (await axios.get(`${this.apiRoot}/api/users/me?firebaseAuthToken=${firebaseAuthToken}`)).data;
+
+        if (!this.currentUser.workspaces.length)
+            throw new Error(`You need to create a new workspace on ${this.webappRoot} before using the plugin`);
+
+        if (this.currentUser.currentWorkspace)
+            this.currentWorkspace = this.currentUser.currentWorkspace;
+        else {
+            await this.setWorkspace(this.currentUser.workspaces[0].name);
+            await axios.post(`${this.apiRoot}/api/users/me/setCurrentWorkspace`, { firebaseAuthToken, data: { workspace: this.currentUser.workspaces[0].name }});
+        }
+
+        return this.currentWorkspace;
     }
 
     async login(email: string, password: string) {
         try {
+            if (this.apiToken)
+                throw new Error('Authenticating with API token');
+
             if (process.env.AUTH_HOST)
                 connectAuthEmulator(auth, process.env.AUTH_HOST);
 
@@ -52,18 +90,7 @@ export class Api {
             await signInWithEmailAndPassword(this.auth, email, password);
             if (this.auth.currentUser) {
                 this.firebaseUserId = this.auth.currentUser.uid;
-                const firebaseAuthToken = await this.getFirebaseAuthToken();
-                this.currentUser = (await axios.get(`${this.apiRoot}/api/users/me?firebaseAuthToken=${firebaseAuthToken}`)).data;
-
-                if (!this.currentUser.workspaces.length)
-                    throw new Error(`You need to create a new workspace on ${this.webappRoot} before using the plugin`);
-
-                if (this.currentUser.currentWorkspace)
-                    this.currentWorkspace = this.currentUser.currentWorkspace;
-                else {
-                    await this.setWorkspace(this.currentUser.workspaces[0].name);
-                    await axios.post(`${this.apiRoot}/api/users/me/setCurrentWorkspace`, { firebaseAuthToken, data: { workspace: this.currentUser.workspaces[0].name }});
-                }
+                return this.fetchUser();
             }
             else
                 throw new Error(`Couldn't login with the specified email/password`);
@@ -89,7 +116,7 @@ export class Api {
                 throw new Error(`Couldn't find workspace ${workspace}. Make sure you're logged in with the correct account`);
 
             const firebaseAuthToken = await this.getFirebaseAuthToken();
-            if (!firebaseAuthToken)
+            if (!firebaseAuthToken && !this.isUsingApiToken)
                 throw new Error('[setWorkspace] You need to be authenticated to set a workspace');
         }
 
@@ -101,7 +128,7 @@ export class Api {
             throw new Error('[resetWorkspace] Missing workspace name');
 
         const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken)
+        if (!firebaseAuthToken && !this.isUsingApiToken)
             throw new Error('[resetWorkspace] You need to be authenticated to reset a workspace');
         
         return await axios.post(`${this.apiRoot}/api/workspaces/reset`, { firebaseAuthToken, data: { workspace: workspaceName }});
@@ -112,7 +139,7 @@ export class Api {
             throw new Error('[syncBlock] Missing block');
 
         const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken)
+        if (!firebaseAuthToken && !this.isUsingApiToken)
             throw new Error('[syncBlock] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
@@ -126,7 +153,7 @@ export class Api {
             throw new Error('[syncTransaction] Missing parameter');
 
         const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken)
+        if (!firebaseAuthToken && !this.isUsingApiToken)
             throw new Error('[syncTransaction] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
@@ -148,7 +175,7 @@ export class Api {
             throw new Error('[syncTrace] Missing parameter');
 
         const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken)
+        if (!firebaseAuthToken && !this.isUsingApiToken)
             throw new Error('[syncTrace] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
@@ -169,7 +196,7 @@ export class Api {
             throw new Error('[syncContractData] Missing parameter');
 
         const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken)
+        if (!firebaseAuthToken && !this.isUsingApiToken)
             throw new Error('[syncContractData] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
@@ -188,6 +215,9 @@ export class Api {
     }
 
     syncContractArtifact(address: string, artifact: any) {
+        if (this.isUsingApiToken)
+            throw new Error('It is not possible yet to synchronize AST with api token authentication');
+            
         if (!address || !artifact)
             throw new Error('[syncContractArtifact] Missing parameter');
 
@@ -202,6 +232,9 @@ export class Api {
     }
 
     syncContractDependencies(address: string, dependencies: any) {
+        if (this.isUsingApiToken)
+            throw new Error('It is not possible yet to synchronize AST with api token authentication');
+
         if (!address || !dependencies)
             throw new Error('[syncContractDependencies] Missing parameter');
 

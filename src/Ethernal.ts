@@ -71,14 +71,14 @@ export class Ethernal {
             try {
                 await this.api.syncContractArtifact(contract.address, contract.artifact)
             } catch(error) {
-                return logger(error);
+                logger(error);
             }
         }
 
         try {
             await this.api.syncContractData(contract.name, contract.address, contract.abi);
         } catch(error) {
-            return logger(error);
+            logger(error);
         }
 
         if (this.env.config.ethernal.uploadAst) {
@@ -264,7 +264,6 @@ export class Ethernal {
             } catch(error) {
                 logger(`Error while syncing trace for transaction ${transaction.hash}`);
             }
-            
         }
     }
 
@@ -282,22 +281,28 @@ export class Ethernal {
 
     private async login() {
         try {
-            let email, password;
-
-            email = this.env.config.ethernal.email;
-
-            if (!email) {
-                return logger(`Missing email to authenticate. Make sure you've either set ETHERNAL_EMAIL in your environment or they key 'email' in your Ethernal config object & restart the node.`);
+            if (this.env.config.ethernal.apiToken) {
+                await this.api.setApiToken(this.env.config.ethernal.apiToken);
+                logger(`Authenticated with API token.`)
             }
             else {
-                password = this.env.config.ethernal.password;
-                if (!password) {
-                    return logger(`Missing password to authenticate. Make sure you've either set ETHERNAL_PASSWORD in your environment or they key 'password' in your Ethernal config object & restart the node.`);
-                }    
-            }
+                let email, password;
 
-            await this.api.login(email, password);
-            logger(`Logged in with ${email}`);
+                email = this.env.config.ethernal.email;
+
+                if (!email) {
+                    return logger(`Missing email to authenticate. Make sure you've either set ETHERNAL_EMAIL in your environment or they key 'email' in your Ethernal config object & restart the node.`);
+                }
+                else {
+                    password = this.env.config.ethernal.password;
+                    if (!password) {
+                        return logger(`Missing password to authenticate. Make sure you've either set ETHERNAL_PASSWORD in your environment or they key 'password' in your Ethernal config object & restart the node.`);
+                    }    
+                }
+
+                await this.api.login(email, password);
+                logger(`Logged in with ${email}`);
+            }
 
             return true;
         }
