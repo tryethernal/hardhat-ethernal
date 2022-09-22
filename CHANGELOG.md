@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.1.0] - 2022-09-22
+### Added
+- Authentication with api token, get your token at https://app.tryethernal.com/settings?tab=account
+
 ## [v2.0.2] - 2022-09-15
 ### Fixed
 - Workspace setup was buggy, especially if the user didn't create a workspace before launching the node.
