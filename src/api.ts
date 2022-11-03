@@ -1,14 +1,12 @@
 const axios = require('axios');
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { Workspace, TraceStep } from './types';
 const { FIREBASE_CONFIG } = require('./config');
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
-const functions = getFunctions(app);
 
 export class Api {
     private apiRoot: string;
@@ -83,9 +81,6 @@ export class Api {
 
             if (process.env.AUTH_HOST)
                 connectAuthEmulator(auth, process.env.AUTH_HOST);
-
-            if (process.env.FUNCTIONS_HOST)
-                connectFunctionsEmulator(functions, 'localhost', 5001);
 
             await signInWithEmailAndPassword(this.auth, email, password);
             if (this.auth.currentUser) {
@@ -214,37 +209,23 @@ export class Api {
         });
     }
 
-    syncContractArtifact(address: string, artifact: any) {
-        if (this.isUsingApiToken)
-            throw new Error('It is not possible yet to synchronize AST with api token authentication');
-            
-        if (!address || !artifact)
-            throw new Error('[syncContractArtifact] Missing parameter');
+    async syncContractAst(address: string, ast: any) {
+        if (!address || !ast)
+            throw new Error('[syncContractAst] Missing parameter');
+
+        const firebaseAuthToken = await this.getFirebaseAuthToken();
+        if (!firebaseAuthToken && !this.isUsingApiToken)
+            throw new Error('[syncContractData] You need to be authenticated to reset a workspace');
 
         if (!this.currentWorkspace)
-            throw new Error('[syncContractArtifact] The workspace needs to be set to synchronize blocks');
+            throw new Error('[syncContractAst] The workspace needs to be set to synchronize blocks');
 
-        return httpsCallable(functions, 'syncContractArtifact')({
-            workspace: this.currentWorkspace.name,
-            address: address,
-            artifact: artifact
-        });
-    }
-
-    syncContractDependencies(address: string, dependencies: any) {
-        if (this.isUsingApiToken)
-            throw new Error('It is not possible yet to synchronize AST with api token authentication');
-
-        if (!address || !dependencies)
-            throw new Error('[syncContractDependencies] Missing parameter');
-
-        if (!this.currentWorkspace)
-            throw new Error('[syncContractDependencies] The workspace needs to be set to synchronize blocks');
-
-        return httpsCallable(functions, 'syncContractDependencies')({
-            workspace: this.currentWorkspace.name,
-            address: address,
-            dependencies: dependencies
+        return await axios.post(`${this.apiRoot}/api/contracts/${address}`, {
+            firebaseAuthToken,
+            data: {
+                ast: ast,
+                workspace: this.currentWorkspace.name
+            }
         });
     }
 }

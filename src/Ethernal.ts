@@ -23,7 +23,7 @@ export class Ethernal {
         this.env = hre;
         this.api = new Api(ETHERNAL_API_ROOT, ETHERNAL_WEBAPP_ROOT);
         this.trace = [];
-        this.syncNextBlock = true;
+        this.syncNextBlock = false;
     }
 
     public async startListening() {
@@ -33,16 +33,13 @@ export class Ethernal {
         if (this.env.config.ethernal.resetOnStart)
             await this.resetWorkspace(this.env.config.ethernal.resetOnStart);
 
-        this.syncNextBlock = false;
-
         this.env.ethers.provider.on('block', (blockNumber: number, error: any) => {
-            if (blockNumber == 0 || this.syncNextBlock){
-                this.syncNextBlock = true;
-                this.onData(blockNumber, error)
-            }
-            else {
+            if (!!this.env.config.ethernal.skipFirstBlock && !this.syncNextBlock){
                 logger(`Skipping block ${blockNumber}`);
                 this.syncNextBlock = true;
+            }
+            else {
+                this.onData(blockNumber, error);
             }
         });
         this.env.ethers.provider.on('error', (error: any) => this.onError(error));
@@ -66,30 +63,19 @@ export class Ethernal {
             return;
         }
 
-        if (this.env.config.ethernal.uploadAst) {
-            logger('Uploading contract AST, this might take a while depending on the size of your contract.');
-            try {
-                await this.api.syncContractArtifact(contract.address, contract.artifact)
-            } catch(error) {
-                logger(error);
-            }
-        }
-
         try {
             await this.api.syncContractData(contract.name, contract.address, contract.abi);
-        } catch(error) {
-            logger(error);
+        } catch(error: any) {
+            logger(error.message);
         }
 
         if (this.env.config.ethernal.uploadAst) {
-            logger('Uploading dependencies ASTs, this might take a while depending on the size of your contracts.');
+            logger('Uploading ASTs, this might take a while depending on the size of your contracts.');
             try {
-                const dependenciesPromises = [];
-
-                for (const dep in contract.dependencies)
-                    dependenciesPromises.push(this.api.syncContractDependencies(contract.address, { [dep]: contract.dependencies[dep] }));
-
-                await Promise.all(dependenciesPromises);
+                await this.api.syncContractAst(contract.address, {
+                    artifact: contract.artifact,
+                    dependencies: contract.dependencies
+                });
             } catch(error: any) {
                 logger(`Couldn't sync dependencies: ${error.message}`);
             }

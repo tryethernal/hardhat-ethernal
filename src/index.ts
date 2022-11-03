@@ -37,7 +37,8 @@ extendConfig(
             email: userConfig.ethernal?.email || process.env.ETHERNAL_EMAIL,
             password: userConfig.ethernal?.password || process.env.ETHERNAL_PASSWORD,
             serverSync: !!userConfig.ethernal?.serverSync,
-            apiToken: userConfig.ethernal?.apiToken || process.env.ETHERNAL_API_TOKEN
+            apiToken: userConfig.ethernal?.apiToken || process.env.ETHERNAL_API_TOKEN,
+            skipFirstBlock: !!userConfig.ethernal?.skipFirstBlock
         };
 
         return config;
