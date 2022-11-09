@@ -15,15 +15,15 @@ export class Ethernal {
     public env: HardhatRuntimeEnvironment;
     private targetContract!: ContractInput;
     private db: any;
-    private trace: any[];
     private syncNextBlock: Boolean;
     private api: any;
+    private traces: any[];
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
         this.api = new Api(ETHERNAL_API_ROOT, ETHERNAL_WEBAPP_ROOT);
-        this.trace = [];
-        this.syncNextBlock = true;
+        this.syncNextBlock = false;
+        this.traces = [];
     }
 
     public async startListening() {
@@ -101,12 +101,15 @@ export class Ethernal {
     }
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
-        if (this.env.config.ethernal.disabled) { return; }
+        if (this.env.config.ethernal.disabled) return;
         if (this.env.config.ethernal.disableTrace) return;
+        if (isMessageTraceFromACall) return;
 
         await this.setLocalEnvironment();
         const envSet = await this.setLocalEnvironment();
         if (!envSet) return;
+
+        const parsedTrace: any = [];
 
         let stepper = async (step: MessageTraceStep) => {
             if (isEvmStep(step) || isPrecompileTrace(step))
@@ -114,7 +117,7 @@ export class Ethernal {
             if (isCreateTrace(step) && step.deployedContract) {
                 const address = `0x${step.deployedContract.toString('hex')}`;
                 const bytecode = await this.env.ethers.provider.getCode(address);
-                this.trace.push({
+                parsedTrace.push({
                     op: 'CREATE2',
                     contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
                     address: address,
@@ -124,7 +127,7 @@ export class Ethernal {
             if (isCallTrace(step)) {
                 const address = `0x${step.address.toString('hex')}`;
                 const bytecode = await this.env.ethers.provider.getCode(address);
-                this.trace.push({
+                parsedTrace.push({
                     op: 'CALL',
                     contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
                     address: address,
@@ -133,19 +136,19 @@ export class Ethernal {
                     returnData: step.returnData.toString('hex')
                 });
             }
+
             for (var i = 0; i < step.steps.length; i++) {
                 await stepper(step.steps[i]);
             }
         };
 
-        if (this.trace) {
-            this.trace = [];
-            if (!isEvmStep(trace) && !isPrecompileTrace(trace)) {
-                for (const step of trace.steps) {
-                    stepper(step);
-                }
+        if (!isEvmStep(trace) && !isPrecompileTrace(trace)) {
+            for (const step of trace.steps) {
+                await stepper(step);
             }
         }
+
+        this.traces.push(parsedTrace)
     }
 
     public async resetWorkspace(workspace: string) {
@@ -217,6 +220,7 @@ export class Ethernal {
 
     private async syncBlock(block: BlockWithTransactions) {
         if (block) {
+            const trace = this.traces.shift();
             try {
                 await this.api.syncBlock(block, false);
                 logger(`Synced block #${block.number}`);
@@ -230,7 +234,8 @@ export class Ethernal {
                     if (!receipt)
                         logger(`Couldn't get receipt for transaction ${transaction.hash}`);
                     else
-                        await this.syncTransaction(block, transaction, receipt);
+                        // We can't match a trace to a transaction, so we assume blocks with 1 transaction, and sync the trace only for the first one
+                        await this.syncTransaction(block, transaction, receipt, i == 0 ? trace : null);
                 } catch(error) {
                     logger(`Coulnd't sync transaction ${transaction.hash}`);
                 }
@@ -251,15 +256,16 @@ export class Ethernal {
         return res;
     }
     
-    private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
+    private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt, trace: any[] | null) {
         try {
-            await this.api.syncTransaction(block, transaction, transactionReceipt)
+            await this.api.syncTransaction(block, transaction, transactionReceipt);
+            logger(`Synced transaction ${transaction.hash}`);
         } catch (error) {
             logger(`Coulnd't sync transaction ${transaction.hash}`);
         }
-        if (this.trace && this.trace.length) {
+        if (trace && trace.length) {
             try {
-                await this.api.syncTrace(transaction.hash, this.trace);
+                await this.api.syncTrace(transaction.hash, trace);
                 logger(`Synced trace for transaction ${transaction.hash}`);
             } catch(error) {
                 logger(`Error while syncing trace for transaction ${transaction.hash}`);

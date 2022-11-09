@@ -21,7 +21,7 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
 });
 
 experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceFromACall) => {
-    if (!hre.config.ethernal.disabled)
+    if (!hre.config.ethernal.disabled && !isMessageTraceFromACall)
         hre.ethernal.traceHandler(trace, isMessageTraceFromACall);
 });
 
