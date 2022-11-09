@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.0.1] - 2022-11-09
+### Fixed
+- Transaction tracing. More reliable now.
+
+## [v3.0.0] - 2022-11-03
+### Changed
+- [Breaking Change] AST is now uploaded to Postgres, not Firebase RTDB anymore
+- [(Semi) Breaking Change] Block skipping is now manual, using the skipFirstBlock parameter
+
 ## [v2.1.0] - 2022-09-22
 ### Added
 - Authentication with api token, get your token at https://app.tryethernal.com/settings?tab=account
