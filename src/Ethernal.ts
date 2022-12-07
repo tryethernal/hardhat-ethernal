@@ -4,7 +4,7 @@ import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
 import { Api } from './api';
-const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://app-pql6sv7epq-uc.a.run.app';
+const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://api.tryethernal.com';
 const ETHERNAL_WEBAPP_ROOT = process.env.ETHERNAL_WEBAPP_ROOT || 'https://app.tryethernal.com';
 
 var logger = (message: any) => {

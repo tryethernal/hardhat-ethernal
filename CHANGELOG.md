@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.0.2] - 2022-12-07
+### Changed
+- Update API endpoint
+
 ## [v3.0.1] - 2022-11-09
 ### Fixed
 - Transaction tracing. More reliable now.
