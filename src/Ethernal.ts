@@ -7,8 +7,19 @@ import { Api } from './api';
 const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://api.tryethernal.com';
 const ETHERNAL_WEBAPP_ROOT = process.env.ETHERNAL_WEBAPP_ROOT || 'https://app.tryethernal.com';
 
-var logger = (message: any) => {
+const logger = (message: any) => {
     console.log(`[Ethernal] `, message);
+}
+
+const handleError = (baseMessage: string, error: any, verbose: Boolean) => {
+    try {
+        const errorMessage = error.response?.data || error?.message || `Can't find an error message. Try in verbose mode.`;
+        logger(`${baseMessage}: ${errorMessage}`);
+        if (verbose) console.log(error);
+    } catch(_error: any) {
+        logger(_error.message);
+        if (verbose) console.log(_error);
+    }
 }
 
 export class Ethernal {
@@ -18,12 +29,20 @@ export class Ethernal {
     private syncNextBlock: Boolean;
     private api: any;
     private traces: any[];
+    private verbose: Boolean;
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
         this.api = new Api(ETHERNAL_API_ROOT, ETHERNAL_WEBAPP_ROOT);
         this.syncNextBlock = false;
         this.traces = [];
+        this.verbose = hre.config.ethernal.verbose || false;
+
+        if (this.verbose) {
+            console.log('### Verbose mode activated - Showing Ethernal plugin config ###')
+            console.log(this.env.config.ethernal);
+            console.log('### End of config ###');
+        }
     }
 
     public async startListening() {
@@ -66,7 +85,7 @@ export class Ethernal {
         try {
             await this.api.syncContractData(contract.name, contract.address, contract.abi);
         } catch(error: any) {
-            logger(error.message);
+            handleError('Error syncing contract data', error, this.verbose);
         }
 
         if (this.env.config.ethernal.uploadAst) {
@@ -77,7 +96,7 @@ export class Ethernal {
                     dependencies: contract.dependencies
                 });
             } catch(error: any) {
-                logger(`Couldn't sync dependencies: ${error.message}`);
+                handleError(`Couldn't sync dependencies`, error, this.verbose);
             }
         }
 
@@ -148,7 +167,7 @@ export class Ethernal {
             await this.api.resetWorkspace(workspace);
             logger(`Workspace "${workspace}" has been reset!`);
         } catch(error: any) {
-            logger(`Error while resetting workspace "${workspace}": ${error.message}`);
+            handleError(`Error while resetting workspace "${workspace}"`, error, this.verbose);
         }
     }
 
@@ -160,26 +179,26 @@ export class Ethernal {
             try {
                 logger(`Syncing block #${blockNumber}...`);
                 await this.api.syncBlock({ number: blockNumber }, true);
-            } catch(error) {
-                logger(`Couldn't sync block #${blockNumber}`);
+            } catch(error: any) {
+                handleError(`Couldn't sync block #${blockNumber}`, error, this.verbose);
             }
         }
         else {
             try {
                 const block = await this.env.ethers.provider.getBlockWithTransactions(blockNumber);
                 await this.syncBlock(block);
-            } catch(error) {
-                logger(`Couldn't sync block #${blockNumber}`);
+            } catch(error: any) {
+                handleError(`Couldn't sync block #${blockNumber}`, error, this.verbose);
             }
         }
     }
 
     private onError(error: any) {
         if (error && error.reason) {
-            logger(`Could not connect to ${this.env.ethers.provider}. Error: ${error.reason}`);
+            handleError(`Could not connect to ${this.env.ethers.provider}`, error, this.verbose);
         }
         else {
-            logger(`Could not connect to ${this.env.ethers.provider}.`);
+            handleError(`Could not connect to ${this.env.ethers.provider}`, error, this.verbose);
         }
     }
 
@@ -210,8 +229,8 @@ export class Ethernal {
             try {
                 await this.api.syncBlock(block, false);
                 logger(`Synced block #${block.number}`);
-            }  catch(error) {
-                logger(`Couldn't sync block #${block.number}`);
+            }  catch(error: any) {
+                handleError(`Couldn't sync block #${block.number}`, error, this.verbose);
             }
             for (let i = 0; i < block.transactions.length; i++) {
                 const transaction = block.transactions[i];
@@ -222,8 +241,8 @@ export class Ethernal {
                     else
                         // We can't match a trace to a transaction, so we assume blocks with 1 transaction, and sync the trace only for the first one
                         await this.syncTransaction(block, transaction, receipt, i == 0 ? trace : null);
-                } catch(error) {
-                    logger(`Coulnd't sync transaction ${transaction.hash}`);
+                } catch(error: any) {
+                    handleError(`Couldn't sync transaction ${transaction.hash}`, error, this.verbose);
                 }
             }
         }
@@ -241,20 +260,20 @@ export class Ethernal {
         }
         return res;
     }
-    
+
     private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt, trace: any[] | null) {
         try {
             await this.api.syncTransaction(block, transaction, transactionReceipt);
             logger(`Synced transaction ${transaction.hash}`);
-        } catch (error) {
-            logger(`Coulnd't sync transaction ${transaction.hash}`);
+        } catch (error: any) {
+            handleError(`Couldn't sync transaction ${transaction.hash}`, error, this.verbose);
         }
         if (trace && trace.length) {
             try {
                 await this.api.syncTrace(transaction.hash, trace);
                 logger(`Synced trace for transaction ${transaction.hash}`);
-            } catch(error) {
-                logger(`Error while syncing trace for transaction ${transaction.hash}`);
+            } catch(error: any) {
+                handleError(`Error while syncing trace for transaction ${transaction.hash}`, error, this.verbose);
             }
         }
     }
@@ -266,7 +285,7 @@ export class Ethernal {
 
             return true;
         } catch(error: any) {
-            logger(error.message || 'Error while setting the workspace.');
+            handleError(`Error while setting the workspace`, error, this.verbose);
             return false;
         }
     }
@@ -299,7 +318,7 @@ export class Ethernal {
             return true;
         }
         catch(error: any) {
-            logger(error.message || 'Error during login. Check that credentials are correct & restart the node.');
+            handleError(`Login error`, error, this.verbose);
             return false;
         }
     }

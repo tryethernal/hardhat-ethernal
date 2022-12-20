@@ -38,7 +38,8 @@ extendConfig(
             password: userConfig.ethernal?.password || process.env.ETHERNAL_PASSWORD,
             serverSync: !!userConfig.ethernal?.serverSync,
             apiToken: userConfig.ethernal?.apiToken || process.env.ETHERNAL_API_TOKEN,
-            skipFirstBlock: !!userConfig.ethernal?.skipFirstBlock
+            skipFirstBlock: !!userConfig.ethernal?.skipFirstBlock,
+            verbose: !!userConfig.ethernal?.verbose
         };
 
         return config;

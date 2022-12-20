@@ -12,6 +12,7 @@ export interface EthernalConfig {
     serverSync?: boolean;
     apiToken?: string;
     skipFirstBlock?: boolean;
+    verbose?: boolean;
 }
 
 export interface ContractInput {

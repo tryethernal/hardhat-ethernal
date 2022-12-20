@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.1.0] - 2022-12-20
+### Added
+- Verbose mode. Display full error object + config on plugin start
+
+### Changed
+- Error message returned by server is now displayed
+- Better error handling
+
 ## [v3.0.2] - 2022-12-07
 ### Changed
 - Update API endpoint
