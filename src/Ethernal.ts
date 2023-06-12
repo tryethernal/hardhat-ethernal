@@ -83,7 +83,7 @@ export class Ethernal {
         }
 
         try {
-            await this.api.syncContractData(contract.name, contract.address, contract.abi);
+            await this.api.syncContractData(contract.name, contract.address, contract.abi, targetContract.workspace);
         } catch(error: any) {
             handleError('Error syncing contract data', error, this.verbose);
         }
@@ -94,15 +94,16 @@ export class Ethernal {
                 await this.api.syncContractAst(contract.address, {
                     artifact: contract.artifact,
                     dependencies: contract.dependencies
-                });
+                }, targetContract.workspace);
             } catch(error: any) {
                 handleError(`Couldn't sync dependencies`, error, this.verbose);
             }
         }
 
         const dependencies = Object.entries(contract.dependencies).map(art => art[0]);
-        const dependenciesString = dependencies.length ? ` Dependencies: ${dependencies.join(', ')}` : '';
-        logger(`Updated artifacts for contract ${contract.name} (${contract.address}).${dependenciesString}`);
+        const dependenciesString = dependencies.length ? ` Dependencies: ${dependencies.join(', ')}.` : '';
+        const workspaceString = ` Workspace: ${targetContract.workspace || this.api.currentWorkspaceName}.`;
+        logger(`Updated artifacts for contract ${contract.name} (${contract.address}).${dependenciesString}${workspaceString}`);
     }
 
     public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
@@ -324,7 +325,12 @@ export class Ethernal {
     }
 
     private async getFormattedArtifact(targetContract: ContractInput) {
-        const fullyQualifiedNames = await this.env.artifacts.getAllFullyQualifiedNames();
+        const fullyQualifiedNames: string[] = [];
+        (await this.env.artifacts.getAllFullyQualifiedNames()).map(fqn => {
+            if (fqn.split(':')[1] == targetContract.name)
+                fullyQualifiedNames.push(fqn)
+        });
+
         var defaultBuildInfo = {
             output: {
                 contracts: {},

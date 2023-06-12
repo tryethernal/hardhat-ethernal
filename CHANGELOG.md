@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.2.0] - 2022-12-20
+### Added
+- `workspace` parameter in the `ethernal.push` function to override global config for this call
+
+### Fixed
+- Bug that was uploading too much data for AST upload, speeding up the process
+
 ## [v3.1.0] - 2022-12-20
 ### Added
 - Verbose mode. Display full error object + config on plugin start

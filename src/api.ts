@@ -186,7 +186,7 @@ export class Api {
         });
     }
 
-    async syncContractData(name: string, address: string, abi: any[] | null, hashedBytecode: string | undefined) {
+    async syncContractData(name: string, address: string, abi: any[] | null, workspaceName: string | undefined, hashedBytecode: string | undefined) {
         if (!name || !address)
             throw new Error('[syncContractData] Missing parameter');
 
@@ -204,12 +204,12 @@ export class Api {
                 address: address,
                 abi: abi,
                 hashedBytecode: hashedBytecode, 
-                workspace: this.currentWorkspace.name
+                workspace: workspaceName || this.currentWorkspace.name
             }
         });
     }
 
-    async syncContractAst(address: string, ast: any) {
+    async syncContractAst(address: string, ast: any, workspaceName: string | undefined) {
         if (!address || !ast)
             throw new Error('[syncContractAst] Missing parameter');
 
@@ -224,7 +224,7 @@ export class Api {
             firebaseAuthToken,
             data: {
                 ast: ast,
-                workspace: this.currentWorkspace.name
+                workspace: workspaceName || this.currentWorkspace.name
             }
         });
     }
