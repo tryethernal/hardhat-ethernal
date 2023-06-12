@@ -67,7 +67,8 @@ const Greeter = await hre.ethers.getContractFactory("Greeter");
 const greeter = await Greeter.deploy("Hello, Hardhat!");
 await hre.ethernal.push({
     name: 'Greeter',
-    address: greeter.address
+    address: greeter.address,
+    workspace: 'hardhat' // Optional, will override the workspace set in hardhat.config for this call only
 });
 ```
 
