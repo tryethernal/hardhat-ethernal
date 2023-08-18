@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.2.1] - 2023-08-18
+### Fixed
+- Tentative dependencies fix
+
 ## [v3.2.0] - 2022-12-20
 ### Added
 - `workspace` parameter in the `ethernal.push` function to override global config for this call
