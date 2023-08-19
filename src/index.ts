@@ -1,6 +1,6 @@
-import '@nomiclabs/hardhat-ethers';
+import "@nomicfoundation/hardhat-ethers";
 import { extendEnvironment, subtask, experimentalAddHardhatNetworkMessageTraceHook, extendConfig } from "hardhat/config";
-import { HardhatConfig, HardhatUserConfig } from "hardhat/types";
+import { HardhatConfig, HardhatUserConfig, HardhatRuntimeEnvironment } from "hardhat/types";
 import { lazyObject } from "hardhat/plugins";
 import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
 
@@ -46,7 +46,7 @@ extendConfig(
     }
 );
 
-extendEnvironment((hre) => {
+extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   if (hre.config.ethernal.disabled) {
       console.log('[Ethernal] Ethernal is disabled.')
   }
