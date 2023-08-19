@@ -1,6 +1,6 @@
 {
   "name": "hardhat-ethernal",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Ethernal Hardhat plugin",
   "repository": "github:tryethernal/hardhat-ethernal",
   "author": "Antoine de Chevigné",
@@ -46,6 +46,6 @@
     "typescript": "^4.0.3"
   },
   "peerDependencies": {
-    "hardhat": "^2.9.1"
+    "hardhat": "^2.17.1"
   }
 }

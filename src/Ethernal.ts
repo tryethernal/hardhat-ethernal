@@ -1,4 +1,5 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { ethers, keccak256 } from 'ethers';
 import { ContractInput, EthernalContract, EthernalConfig } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
 import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
@@ -30,6 +31,7 @@ export class Ethernal {
     private api: any;
     private traces: any[];
     private verbose: Boolean;
+    private provider: any;
 
     constructor(hre: HardhatRuntimeEnvironment) {
         this.env = hre;
@@ -37,6 +39,7 @@ export class Ethernal {
         this.syncNextBlock = false;
         this.traces = [];
         this.verbose = hre.config.ethernal.verbose || false;
+        this.provider = hre.ethers.provider;
 
         if (this.verbose) {
             console.log('### Verbose mode activated - Showing Ethernal plugin config ###')
@@ -52,7 +55,7 @@ export class Ethernal {
         if (this.env.config.ethernal.resetOnStart)
             await this.resetWorkspace(this.env.config.ethernal.resetOnStart);
 
-        this.env.ethers.provider.on('block', (blockNumber: number, error: any) => {
+        this.provider.on('block', (blockNumber: number, error: any) => {
             if (!!this.env.config.ethernal.skipFirstBlock && !this.syncNextBlock){
                 logger(`Skipping block ${blockNumber}`);
                 this.syncNextBlock = true;
@@ -61,8 +64,6 @@ export class Ethernal {
                 this.onData(blockNumber, error);
             }
         });
-        this.env.ethers.provider.on('error', (error: any) => this.onError(error));
-        this.env.ethers.provider.on('pending', () => this.onPending());
     }
 
     public async push(targetContract: ContractInput) {
@@ -122,20 +123,20 @@ export class Ethernal {
                 return;
             if (isCreateTrace(step) && step.deployedContract) {
                 const address = `0x${step.deployedContract.toString('hex')}`;
-                const bytecode = await this.env.ethers.provider.getCode(address);
+                const bytecode = await this.provider.getCode(address);
                 parsedTrace.push({
                     op: 'CREATE2',
-                    contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
+                    contractHashedBytecode: keccak256(bytecode),
                     address: address,
                     depth: step.depth
                 });
             }
             if (isCallTrace(step)) {
                 const address = `0x${step.address.toString('hex')}`;
-                const bytecode = await this.env.ethers.provider.getCode(address);
+                const bytecode = await this.provider.getCode(address);
                 parsedTrace.push({
                     op: 'CALL',
-                    contractHashedBytecode: this.env.ethers.utils.keccak256(bytecode),
+                    contractHashedBytecode: keccak256(bytecode),
                     address: address,
                     input: step.calldata.toString('hex'),
                     depth: step.depth,
@@ -186,20 +187,11 @@ export class Ethernal {
         }
         else {
             try {
-                const block = await this.env.ethers.provider.getBlockWithTransactions(blockNumber);
+                const block = await this.provider.getBlock(blockNumber, true);
                 await this.syncBlock(block);
             } catch(error: any) {
                 handleError(`Couldn't sync block #${blockNumber}`, error, this.verbose);
             }
-        }
-    }
-
-    private onError(error: any) {
-        if (error && error.reason) {
-            handleError(`Could not connect to ${this.env.ethers.provider}`, error, this.verbose);
-        }
-        else {
-            handleError(`Could not connect to ${this.env.ethers.provider}`, error, this.verbose);
         }
     }
 
@@ -220,46 +212,41 @@ export class Ethernal {
         return true;
     }
 
-    private onPending() {
-        //TODO: to implement
-    }
-
     private async syncBlock(block: BlockWithTransactions) {
         if (block) {
             const trace = this.traces.shift();
             try {
-                await this.api.syncBlock(block, false);
+                await this.api.syncBlock(this.stringifyBns(block), false);
                 logger(`Synced block #${block.number}`);
             }  catch(error: any) {
                 handleError(`Couldn't sync block #${block.number}`, error, this.verbose);
             }
             for (let i = 0; i < block.transactions.length; i++) {
-                const transaction = block.transactions[i];
+                const hash = block.transactions[i];
+                const transaction = await this.provider.getTransaction(hash);
+
                 try {
-                    const receipt = await this.env.ethers.provider.getTransactionReceipt(transaction.hash);
+                    const receipt = await this.provider.getTransactionReceipt(transaction.hash);
+
                     if (!receipt)
                         logger(`Couldn't get receipt for transaction ${transaction.hash}`);
-                    else
+                    else {
+                        const syncedTransaction = {
+                            ...this.stringifyBns(this.sanitize(transaction)),
+                            provider: null,
+                            r: transaction.signature.r,
+                            s: transaction.signature.s,
+                            transactionIndex: transaction.index || transaction.transactionIndex
+                        };
+
                         // We can't match a trace to a transaction, so we assume blocks with 1 transaction, and sync the trace only for the first one
-                        await this.syncTransaction(block, transaction, receipt, i == 0 ? trace : null);
+                        await this.syncTransaction(block, syncedTransaction, this.stringifyBns(this.sanitize({ ...receipt, logs: receipt.logs, provider: null})), i == 0 ? trace : null);
+                    }
                 } catch(error: any) {
                     handleError(`Couldn't sync transaction ${transaction.hash}`, error, this.verbose);
                 }
             }
         }
-    }
-
-    private stringifyBns(obj: any) {
-        var res: any = {}
-        for (const key in obj) {
-            if (this.env.ethers.BigNumber.isBigNumber(obj[key])) {
-                res[key] = obj[key].toString();
-            }
-            else {
-                res[key] = obj[key];
-            }
-        }
-        return res;
     }
 
     private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt, trace: any[] | null) {
@@ -380,8 +367,21 @@ export class Ethernal {
         var res: any = {};
         res = Object.fromEntries(
             Object.entries(obj)
-                .filter(([_, v]) => v != null)
+                .filter(([k, v]) => v != null && k != 'provider')
             );
+        return res;
+    }
+
+    private stringifyBns(obj: any) {
+        var res: any = {}
+        for (const key in obj) {
+            if (typeof obj[key] == 'bigint') {
+                res[key] = obj[key].toString();
+            }
+            else {
+                res[key] = obj[key];
+            }
+        }
         return res;
     }
 }
