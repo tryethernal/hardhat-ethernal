@@ -52,9 +52,6 @@ export class Ethernal {
         const envSet = await this.setLocalEnvironment();
         if (!envSet) { return; }
 
-        if (this.env.config.ethernal.resetOnStart)
-            await this.resetWorkspace(this.env.config.ethernal.resetOnStart);
-
         this.provider.on('block', (blockNumber: number, error: any) => {
             if (!!this.env.config.ethernal.skipFirstBlock && !this.syncNextBlock){
                 logger(`Skipping block ${blockNumber}`);

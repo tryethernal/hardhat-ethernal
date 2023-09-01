@@ -11,6 +11,8 @@ import "./type-extensions";
 subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
     const ethernalConfig = hre.config.ethernal;
     if (ethernalConfig && !ethernalConfig.disabled) {
+        if (ethernalConfig.resetOnStart)
+            await hre.ethernal.resetWorkspace(ethernalConfig.resetOnStart);
         if (!ethernalConfig.disableSync) {
             hre.ethernal.startListening();
         }
