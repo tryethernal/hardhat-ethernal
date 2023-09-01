@@ -18,13 +18,12 @@ In your ```hardhat-config.js```file, require the plugin:
 require('hardhat-ethernal');
 ````
 
-To authenticate, you can set `ETHERNAL_EMAIL` and `ETHERNAL_PASSWORD` in your env variables, they'll be picked up automatically.
+To authenticate, you need to set `ETHERNAL_API_TOKEN` in your env variables. You can find the token by logging in at https://app.tryethernal.com > Settings > Account
 You can also set them in the config object:
 ```js
 module.exports = {
     ethernal: {
-        email: process.env.ETHERNAL_EMAIL,
-        password: process.env.ETHERNAL_PASSWORD,
+        apiToken: process.env.ETHERNAL_API_TOKEN
     }
 };
 ```
