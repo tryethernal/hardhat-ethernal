@@ -1,5 +1,5 @@
 import "@nomicfoundation/hardhat-ethers";
-import { extendEnvironment, subtask, experimentalAddHardhatNetworkMessageTraceHook, extendConfig } from "hardhat/config";
+import { extendEnvironment, subtask, extendConfig } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig, HardhatRuntimeEnvironment } from "hardhat/types";
 import { lazyObject } from "hardhat/plugins";
 import { TASK_NODE_SERVER_READY } from "hardhat/builtin-tasks/task-names";
@@ -20,11 +20,6 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
             console.log('[Ethernal] Not syncing')
     }
     await runSuper(args);
-});
-
-experimentalAddHardhatNetworkMessageTraceHook(async (hre, trace, isMessageTraceFromACall) => {
-    if (!hre.config.ethernal.disabled && !isMessageTraceFromACall)
-        hre.ethernal.traceHandler(trace, isMessageTraceFromACall);
 });
 
 extendConfig(
