@@ -1,6 +1,6 @@
 {
   "name": "hardhat-ethernal",
-  "version": "3.2.5",
+  "version": "3.3.0",
   "description": "Ethernal Hardhat plugin",
   "repository": "github:tryethernal/hardhat-ethernal",
   "author": "Antoine de Chevigné",
