@@ -2,7 +2,6 @@ import { BlockWithTransactions } from '@ethersproject/abstract-provider';
 
 export interface EthernalConfig {
     disableSync: boolean;
-    disableTrace: boolean;
     workspace?: string;
     uploadAst: boolean;
     disabled: boolean;
@@ -76,13 +75,4 @@ export type SyncedBlock = {
     gasUsed: string;
     miner: string;
     extraData: string;
-}
-
-export type TraceStep = {
-    op: string;
-    contractHashedBytecode: string;
-    address: string;
-    input: string;
-    depth: number;
-    returnData?: string;
 }

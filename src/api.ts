@@ -2,8 +2,8 @@ const axios = require('axios');
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, connectAuthEmulator } from 'firebase/auth';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
-import { Workspace, TraceStep } from './types';
-const { FIREBASE_CONFIG } = require('./config');
+import { Workspace } from './types';
+const { FIREBASE_CONFIG } = require('./config');
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
@@ -160,27 +160,6 @@ export class Api {
                 block: block,
                 transaction: transaction,
                 transactionReceipt: transactionReceipt,
-                workspace: this.currentWorkspace.name
-            }
-        });
-    }
-
-    async syncTrace(transactionHash: string, trace: TraceStep[]) {
-        if (!transactionHash || !trace)
-            throw new Error('[syncTrace] Missing parameter');
-
-        const firebaseAuthToken = await this.getFirebaseAuthToken();
-        if (!firebaseAuthToken && !this.isUsingApiToken)
-            throw new Error('[syncTrace] You need to be authenticated to reset a workspace');
-
-        if (!this.currentWorkspace)
-            throw new Error('[syncTrace] The workspace needs to be set to synchronize blocks');
-    
-        return await axios.post(`${this.apiRoot}/api/transactions/${transactionHash}/trace`, {
-            firebaseAuthToken,
-            data: {
-                txHash: transactionHash,
-                steps: trace,
                 workspace: this.currentWorkspace.name
             }
         });

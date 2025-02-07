@@ -5,14 +5,11 @@ import "hardhat/types/config";
 import "hardhat/types/runtime";
 
 import { ContractInput, EthernalConfig } from './types';
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { MessageTraceStep } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
 declare module "hardhat/types/runtime" {
   export interface HardhatRuntimeEnvironment {
     ethernal: {
         startListening:() => Promise<void>;
-        traceHandler:(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) => Promise<void>;
         push: (contract: ContractInput) => Promise<void>;
         resetWorkspace: (workspace: string) => Promise<void>;
     }

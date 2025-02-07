@@ -1,8 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ethers, keccak256 } from 'ethers';
+import { keccak256 } from 'ethers';
 import { ContractInput, EthernalContract, EthernalConfig } from './types';
 import { BlockWithTransactions, TransactionResponse, TransactionReceipt } from '@ethersproject/abstract-provider';
-import { MessageTraceStep, isCreateTrace, isCallTrace, CreateMessageTrace, CallMessageTrace, isEvmStep, isPrecompileTrace } from "hardhat/internal/hardhat-network/stack-traces/message-trace";
 
 import { Api } from './api';
 const ETHERNAL_API_ROOT = process.env.ETHERNAL_API_ROOT || 'https://api.tryethernal.com';
@@ -29,7 +28,6 @@ export class Ethernal {
     private db: any;
     private syncNextBlock: Boolean;
     private api: any;
-    private traces: any[];
     private verbose: Boolean;
     private provider: any;
 
@@ -37,7 +35,6 @@ export class Ethernal {
         this.env = hre;
         this.api = new Api(ETHERNAL_API_ROOT, ETHERNAL_WEBAPP_ROOT);
         this.syncNextBlock = false;
-        this.traces = [];
         this.verbose = hre.config.ethernal.verbose || false;
         this.provider = hre.ethers.provider;
 
@@ -104,57 +101,6 @@ export class Ethernal {
         logger(`Updated artifacts for contract ${contract.name} (${contract.address}).${dependenciesString}${workspaceString}`);
     }
 
-    public async traceHandler(trace: MessageTraceStep, isMessageTraceFromACall: Boolean) {
-        if (this.env.config.ethernal.disabled) return;
-        if (this.env.config.ethernal.disableTrace) return;
-        if (isMessageTraceFromACall) return;
-
-        await this.setLocalEnvironment();
-        const envSet = await this.setLocalEnvironment();
-        if (!envSet) return;
-
-        const parsedTrace: any = [];
-
-        let stepper = async (step: MessageTraceStep) => {
-            if (isEvmStep(step) || isPrecompileTrace(step))
-                return;
-            if (isCreateTrace(step) && step.deployedContract) {
-                const address = `0x${step.deployedContract.toString('hex')}`;
-                const bytecode = await this.provider.getCode(address);
-                parsedTrace.push({
-                    op: 'CREATE2',
-                    contractHashedBytecode: keccak256(bytecode),
-                    address: address,
-                    depth: step.depth
-                });
-            }
-            if (isCallTrace(step)) {
-                const address = `0x${step.address.toString('hex')}`;
-                const bytecode = await this.provider.getCode(address);
-                parsedTrace.push({
-                    op: 'CALL',
-                    contractHashedBytecode: keccak256(bytecode),
-                    address: address,
-                    input: step.calldata.toString('hex'),
-                    depth: step.depth,
-                    returnData: step.returnData.toString('hex')
-                });
-            }
-
-            for (var i = 0; i < step.steps.length; i++) {
-                await stepper(step.steps[i]);
-            }
-        };
-
-        if (!isEvmStep(trace) && !isPrecompileTrace(trace)) {
-            for (const step of trace.steps) {
-                await stepper(step);
-            }
-        }
-
-        this.traces.push(parsedTrace)
-    }
-
     public async resetWorkspace(workspace: string) {
         if (this.env.config.ethernal.disabled) { return; }
         const envSet = await this.setLocalEnvironment();
@@ -211,7 +157,6 @@ export class Ethernal {
 
     private async syncBlock(block: BlockWithTransactions) {
         if (block) {
-            const trace = this.traces.shift();
             try {
                 await this.api.syncBlock(this.stringifyBns(block), false);
                 logger(`Synced block #${block.number}`);
@@ -236,8 +181,7 @@ export class Ethernal {
                             transactionIndex: transaction.index || transaction.transactionIndex
                         };
 
-                        // We can't match a trace to a transaction, so we assume blocks with 1 transaction, and sync the trace only for the first one
-                        await this.syncTransaction(block, syncedTransaction, this.stringifyBns(this.sanitize({ ...receipt, logs: receipt.logs, provider: null})), i == 0 ? trace : null);
+                        await this.syncTransaction(block, syncedTransaction, this.stringifyBns(this.sanitize({ ...receipt, logs: receipt.logs, provider: null})));
                     }
                 } catch(error: any) {
                     handleError(`Couldn't sync transaction ${transaction.hash}`, error, this.verbose);
@@ -246,20 +190,12 @@ export class Ethernal {
         }
     }
 
-    private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt, trace: any[] | null) {
+    private async syncTransaction(block: BlockWithTransactions, transaction: TransactionResponse, transactionReceipt: TransactionReceipt) {
         try {
             await this.api.syncTransaction(block, transaction, transactionReceipt);
             logger(`Synced transaction ${transaction.hash}`);
         } catch (error: any) {
             handleError(`Couldn't sync transaction ${transaction.hash}`, error, this.verbose);
-        }
-        if (trace && trace.length) {
-            try {
-                await this.api.syncTrace(transaction.hash, trace);
-                logger(`Synced trace for transaction ${transaction.hash}`);
-            } catch(error: any) {
-                handleError(`Error while syncing trace for transaction ${transaction.hash}`, error, this.verbose);
-            }
         }
     }
 

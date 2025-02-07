@@ -26,7 +26,6 @@ extendConfig(
     (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
         config.ethernal = {
             disableSync: !!userConfig.ethernal?.disableSync,
-            disableTrace: !!userConfig.ethernal?.disableTrace,
             workspace: userConfig.ethernal?.workspace || process.env.ETHERNAL_WORKSPACE,
             uploadAst: !!userConfig.ethernal?.uploadAst,
             disabled: !!userConfig.ethernal?.disabled,
